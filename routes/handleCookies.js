@@ -31,7 +31,7 @@ module.exports = (io) => {
     const testCookies = async (socket) => {
         await axios({
             method: 'get',
-            url: 'http://192.168.1.4:3001/handle-cookies/' + roomid + '/' + username
+            url: 'http://192.168.1.3:3001/handle-cookies/' + roomid + '/' + username
         })
         .then(res => {
             socket.emit('GetCookies', res.data)
