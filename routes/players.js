@@ -1,67 +1,59 @@
 var express = require('express');
 var router = express.Router();
+const mongoose = require('mongoose')
 const MongoClient = require('mongodb').MongoClient
 
 var mongoUrl = 'mongodb://werewolf_minhchinh_01:Haigay1997@ds057000.mlab.com:57000/werewolf_01'
 
+var playerSchema = require('../mongoose-schema/playerSchema')
+
+
+
+
 
 //to create a new user info or to update the existing one (when player wants to change username) if newUserBttn clicked
 router.post('/create-or-update/:username', (req, res, next) => {
-    MongoClient.connect(mongoUrl, (err, db) => {
-        if(err) console.log(err)
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        var Player = mongoose.model('Player', playerSchema)
+
+        //to verify that the req.body.username does not exist in the players collection
+        Player.findOne({ 'username': req.body.username }, (err, result) => {
+            if(err) return console.log(err)
 
 
-        var username = req.body.username
-
-        //to verify if the req.data.username already exists or not
-        db.collection('Players').findOne({username: username}, (err, result) => {
-            if(err) console.log(err)
-
-            if(result !== null)
-                res.send("username exists")
-            else{
-                //if not, update or insert one
-                db.collection('Players').update({ip: req.ip}, {$set: {
-                        username: username,
-                        roomid: req.body.roomid,
-                        ip: req.ip,
-                        timeCreated: req.body.timeCreated
-                }
-                },
-                {upsert: true} 
-                , (err, result) => {
-                    if(err) console.log(err)
-                    
-                    if(result !== null){
-
-                        //update the related information based on username field in Rooms collection (if the row includes username field exists), remove the overlapping
-                        //name in players array field
-                        db.collection('Rooms').update({roomid: req.body.roomid}, {$set: { admin: username}, $pull: {players: req.body.oldUsername}}, (err, result) => {
-                            if(err) console.log(err)
-
-                            if(result !== null){
-                                //add the current username
-                                db.collection('Rooms').updateOne({roomid: req.body.roomid}, { $push: {players: req.body.username} }, (err, result) => {
-                                    if(err) console.log(err)
-
-                                    if(result !== null)
-                                        res.send("ok")
-                                    else
-                                        res.send("not ok")
-
-                                    db.close()
-                                })
-                            }
-
-                            else
-                                res.send("not ok")
-                        })
-                    }
-                        
+            //if does not exist, proceed
+            if(result === null){
+                var player = new Player({
+                    username: req.body.username,
+                    roomid: req.body.roomid,
+                    timeCreated: req.body.timeCreated,
+                    status: req.body.status
+                })
+        
+                player.save((err, result) => {
+                    if(err) return console.log(err)
+        
+                    if(result !== null)
+                        res.send('ok')
+        
+                    else 
+                        res.send('not ok')
                 })
             }
+
+            //if exists, return
+            else{
+                res.send('not ok')
+                return
+            }
         })
-    }) 
+    })
 })
 
 
