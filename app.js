@@ -17,7 +17,7 @@ var roomsRouter = require('./routes/rooms')(io)
 var handleCookiesRouter = require('./routes/handleCookies')(io)
 var mainPageRouter = require('./routes/mainPage')(io)
 var getCardsRouter = require('./routes/Roles/getCards')(io)
-
+var updateRolesLimitRouter = require('./routes/Roles/updateRolesLimit')(io)
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -36,7 +36,7 @@ app.use('/rooms', roomsRouter)
 app.use('/main-page', mainPageRouter)
 app.use('/handle-cookies', handleCookiesRouter)
 app.use('/get-roles', getCardsRouter)
-
+app.use('/update-roles-limit', updateRolesLimitRouter)
 
 
 
