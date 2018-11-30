@@ -58,7 +58,8 @@ var roomSchema = new mongoose.Schema({
         'The bear leader': Number,
         'The devoted servant': Number,
         'The wild child': Number,
-        'The dog wolf': Number
+        'The dog wolf': Number,
+        'totalCards': Number
     }
 })
 
