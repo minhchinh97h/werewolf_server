@@ -41,7 +41,8 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
                                                                             'numberOfPlayers': req.body.numberOfPlayers,
                                                                             'players': [req.body.players],
                                                                             'status': req.body.status,
-                                                                            'currentRoles': req.body.currentRoles
+                                                                            'currentRoles': req.body.currentRoles,
+                                                                            'recommendedRoles': req.body.recommendedRoles
 
                 }}, {upsert: true}, (err, result) => {
                     if(err) console.log(err)
@@ -159,7 +160,8 @@ module.exports = (io) => {
 
     //     return next(new Error('roomid not found'))    
     // }) 
-
+    getAdminIO.setMaxListeners(Infinity)
+    
     const findAdmin = async (roomid) => {
         await axios({
             method: 'get',

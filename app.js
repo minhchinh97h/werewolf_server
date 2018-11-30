@@ -9,6 +9,9 @@ var indexRouter = require('./routes/index');
 var app = express();
 var socket_io = require('socket.io')
 var io = socket_io()
+
+io.setMaxListeners(Infinity)
+
 app.io = io
 
 

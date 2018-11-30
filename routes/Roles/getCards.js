@@ -30,7 +30,7 @@ router.get('/', (req, res, next) => {
 })
 
 module.exports = (io) => {
-
+    io.of('get-cards').setMaxListeners(Infinity)
     const getCards = async (socket) => {
         await axios({
             method: 'get',

@@ -17,6 +17,7 @@ router.get('/', (req, res, next) => {
 
 
 module.exports = (io) => {
+    io.of('/handle-cookies').setMaxListeners(Infinity)
     let roomid, username
 
     io.of('/handle-cookies').use( (socket, next) => {

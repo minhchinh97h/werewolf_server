@@ -17,7 +17,7 @@ router.post('/:roomid', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => {
-        Room.updateOne({'roomid': req.params.roomid}, { $set: { 'currentRoles': req.body.rolesLimit } }, (err, result) => {
+        Room.updateOne({'roomid': req.params.roomid}, { $set: { 'recommendedRoles': req.body.rolesLimit } }, (err, result) => {
             if(err) return console.log(err)
 
             if(result !== null) 
@@ -37,7 +37,7 @@ router.get('/:roomid', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => {
-        Room.findOne( {'roomid': req.params.roomid}, {'currentRoles': 1, '_id': 0}, (err, result) => {
+        Room.findOne( {'roomid': req.params.roomid}, {'recommendedRoles': 1, '_id': 0}, (err, result) => {
             if(err) return console.log(err)
 
             res.send(result)
@@ -59,6 +59,8 @@ module.exports = (io) => {
     //     return next(new Error('rolesLimit not found'))
     // })
 
+    updateRolesLimitIO.setMaxListeners(Infinity)
+    
     const updateRolesLimit = async (data) => {
         await axios({
             method: 'post',
@@ -88,7 +90,6 @@ module.exports = (io) => {
     updateRolesLimitIO.on('connect', socket => {
 
         socket.on('JoinRoom', data => {
-            console.log(data.roomid)
             socket.join(data.roomid)
             updateRolesLimit(data)
         })

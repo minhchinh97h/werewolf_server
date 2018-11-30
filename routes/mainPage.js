@@ -41,6 +41,7 @@ router.get('/:roomid', (req, res, next) => {
 })
 
 module.exports = (io) => {
+    io.of('/main-page').setMaxListeners(Infinity)
     let roomid
 
     io.of('/main-page').use((socket, next) => {
