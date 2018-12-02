@@ -37,13 +37,24 @@ router.get('/:roomid', (req, res, next) => {
 
                 let roles = []
 
+                let assignedPlayerRoles 
+
                 result.players.forEach((name, index) => {
                     chosenIndex.forEach((data) => {
                         if(index === data)
-                            roles.push(name + ' with index = ' + index)
+                            roles.push({
+                                name: 'Werewolves'
+                            })
                     })
                 })
 
+                for(var key in result.currentRoles){
+                    if(result.currentRoles.hasOwnProperty(key)){
+                        if(result.currentRoles[key] > 0 && key !== 'Werewolves'){
+
+                        }
+                    }
+                }
                 res.send(chosenIndex)
             }
         })
@@ -52,11 +63,9 @@ router.get('/:roomid', (req, res, next) => {
 
 function checkIfEquals(chosenIndex, currentIndex, compareIndex, numberOfPlayersIndex){
     
-
     //base case
     if(compareIndex < 0)
         return
-
 
     //if current index is not equal to the compare index, then keep comparing to the lower index
     if(chosenIndex[currentIndex] !== chosenIndex[compareIndex]){
