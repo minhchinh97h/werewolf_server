@@ -21,6 +21,8 @@ var handleCookiesRouter = require('./routes/handleCookies')(io)
 var mainPageRouter = require('./routes/mainPage')(io)
 var getCardsRouter = require('./routes/Roles/getCards')(io)
 var updateRolesLimitRouter = require('./routes/Roles/updateRolesLimit')(io)
+var updateCurrentRolesRouter = require('./routes/Roles/updateCurrentRoles')(io)
+var startGameRouter = require('./routes/StartGame/startGame')(io)
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -40,8 +42,8 @@ app.use('/main-page', mainPageRouter)
 app.use('/handle-cookies', handleCookiesRouter)
 app.use('/get-roles', getCardsRouter)
 app.use('/update-roles-limit', updateRolesLimitRouter)
-
-
+app.use('/update-current-roles', updateCurrentRolesRouter)
+app.use('/start-game', startGameRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

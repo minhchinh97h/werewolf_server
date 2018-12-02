@@ -24,6 +24,8 @@ router.get('/', (req, res, next) => {
             if(err) return console.log(err)
 
             res.send(result)
+
+            db.close()
         })
 
     })

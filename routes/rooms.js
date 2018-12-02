@@ -56,8 +56,6 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
                     }
                 })
             }
-
-            return
         })
     })
 })
@@ -84,7 +82,6 @@ router.get('/:roomid', (req, res, next) => {
             else
                 res.send("not found")
 
-            return
         })
     })
 } )
@@ -115,7 +112,6 @@ router.post('/:roomid/update', (req, res, next) => {
                 res.send("not ok")
             }
 
-            return
         })
     })
 })

@@ -33,9 +33,6 @@ router.get('/:roomid', (req, res, next) => {
             else
                 res.send("not ok")
 
-            db.close()
-
-            return
         })
     })
 })

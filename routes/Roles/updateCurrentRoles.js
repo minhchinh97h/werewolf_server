@@ -17,12 +17,11 @@ router.post('/:roomid', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => {
-        Room.updateOne({'roomid': req.params.roomid}, { $set: { 'recommendedRoles': req.body.rolesLimit } }, (err, result) => {
+        Room.updateOne({'roomid': req.params.roomid}, { $set: {'currentRoles': req.body.currentRoles}}, (err, result) => {
             if(err) return console.log(err)
 
-            if(result !== null) 
+            if(result !== null)
                 res.send('ok')
-
             else
                 res.send('not ok')
 
@@ -38,58 +37,67 @@ router.get('/:roomid', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => {
-        Room.findOne( {'roomid': req.params.roomid}, {'recommendedRoles': 1, '_id': 0}, (err, result) => {
+        Room.findOne({'roomid': req.params.roomid}, {'currentRoles': 1, '_id': 0}, (err, result) => {
             if(err) return console.log(err)
 
-            res.send(result)
+            res.send(result.currentRoles)
 
-        } )
+        })
     })
 })
 
-
 module.exports = (io) => {
-    let updateRolesLimitIO = io.of('/update-roles-limit')
+    let submitCurrentRolesIO = io.of('/submit-selected-cards')
+    let getCurrentRolesIO = io.of('/get-current-roles')
 
-    updateRolesLimitIO.setMaxListeners(Infinity)
-    
-    const updateRolesLimit = async (data) => {
+    const updateCurrentRoles = async (data) => {
         await axios({
             method: 'post',
-            url: 'http://192.168.1.3:3001/update-roles-limit/' + data.roomid,
+            url: 'http://192.168.1.3:3001/update-current-roles/' + data.roomid,
             data: {
-                rolesLimit: data.rolesLimit
+                currentRoles: data.currentRoles
             }
         })
         .then(res => {
-
             if(res.data === "ok"){
-                return axios({
-                    method: 'get',
-                    url: 'http://192.168.1.3:3001/update-roles-limit/' + data.roomid,
-                })
+                getCurrentRoles(data.roomid)
             }
-            
-        })
-        .then(res => {
-            updateRolesLimitIO.in(data.roomid).emit('UpdateRolesLimitAt', res.data)
         })
         .catch(err => console.log(err))
     }
 
+    const getCurrentRoles = async (roomid) => {
+        await axios({
+            method: 'get',
+            url: 'http://192.168.1.3:3001/update-current-roles/' + roomid
+        })
+        .then(res => {
+            getCurrentRolesIO.in(roomid).emit('GetSelectedCards', res.data)
+        })
+        .catch(err => console.log(err))
+    }
 
-    updateRolesLimitIO.on('connect', socket => {
-
+    submitCurrentRolesIO.on('connect', socket => {
         socket.on('JoinRoom', data => {
             socket.join(data.roomid)
-            updateRolesLimit(data)
+            updateCurrentRoles(data)
         })
 
 
-        updateRolesLimitIO.on('disconnect', () => {
+        submitCurrentRolesIO.on('disconnect', () => {
             console.log('user disconnected')
         })
     })
 
+    getCurrentRolesIO.on('connect', socket => {
+        socket.on('JoinRoom', data => {
+            socket.join(data)   
+            getCurrentRoles(data)
+        })
+
+        getCurrentRolesIO.on('disconnect', () => {
+            console.log('user disconnected')
+        })
+    })
     return router
 }
