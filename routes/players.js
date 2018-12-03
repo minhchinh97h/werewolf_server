@@ -100,9 +100,30 @@ router.post('/:username/update', (req, res, next) => {
             else
                 res.send("not ok")
 
-            db.close()
         } )
     })
 })
 
+
+router.post('/:username/update-role', (req, res, next) => {
+    var username = req.params.username.toString().replace('-', ' ')
+
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        Player.updateOne({'username': username}, {$set: {'role': req.body.role}}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null)
+                res.send("ok")
+            else
+                res.send("not ok")
+            
+        })
+    })
+})
 module.exports = router;
