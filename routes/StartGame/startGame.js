@@ -221,9 +221,7 @@ module.exports = (io) => {
             url: 'http://192.168.1.3:3001/start-game/' + roomid
         })
         .then(res => {
-            startGameIO.in(roomid).emit('GetRoleAssigned', res.data)
-
-            res.data.forEach(player => {
+            res.data.playerRoles.forEach(player => {
                 axios({
                     method: 'post',
                     url: 'http://192.168.1.3:3001/players/' + player.name.toString().replace(' ', '-') + '/update-role',
@@ -240,9 +238,7 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     } 
 
-
     startGameIO.on('connect', socket => {
-
         socket.on('JoinRoom', data => {
             socket.join(data)
         })
