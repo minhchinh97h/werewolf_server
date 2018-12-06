@@ -116,12 +116,6 @@ let callingOrder = [
                         '1stNight': false
                     },
                     {
-                        'name': 'The knight with the rusty sword',
-                        'when': 13,
-                        'player': [],
-                        '1stNight': false
-                    },
-                    {
                         'name': 'The pied piper',
                         'when': 14,
                         'player': [],

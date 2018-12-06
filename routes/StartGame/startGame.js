@@ -9,6 +9,8 @@ var roomSchema = require('../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var callingOrder = require('../../calling-order/callingOrder')
+
 router.get('/:roomid', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -140,7 +142,52 @@ router.get('/:roomid', (req, res, next) => {
                         }
                     }
                 }
-                res.send(playerRoles)
+
+                //Arrange calling order
+                let arrangedOrder = []
+
+                callingOrder.forEach((order, index) => {
+                    playerRoles.forEach((player, playerIndex) => {
+                        if(order.name === player.role){
+                            if(player.role !== 'Witch'){
+                                arrangedOrder.push({
+                                    'name': player.name,
+                                    'role': player.role,
+                                    'index': index,
+                                    '1stNight': order['1stNight']
+                                })
+                            }
+                            
+                            else{
+                                arrangedOrder.push({
+                                    'name': player.name,
+                                    'role': player.role,
+                                    'index': index,
+                                    '1stNight': order['1stNight'],
+                                    'useHeal': order.useHeal,
+                                    'useKill': order.useKill
+                                })
+                            }
+                        }
+                    })
+                })
+
+                //pack data to send
+                let sentData = {
+                    playerRoles: playerRoles,
+                    arrangedOrder: arrangedOrder
+                }
+
+
+                //update the relevant row in rooms collection
+                Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': arrangedOrder }}, (err, result) => {
+                    if(err) return console.log(err)
+
+                    if(result !== null)
+                        res.send(sentData)
+                    else
+                        res.send('not ok')
+                })
             }
         })
     })
