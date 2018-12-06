@@ -33,14 +33,12 @@ router.get('/:roomid', (req, res, next) => {
             else
                 res.send("not ok")
 
-            db.close()
-
-            return
         })
     })
 })
 
 module.exports = (io) => {
+    io.of('/main-page').setMaxListeners(Infinity)
     let roomid
 
     io.of('/main-page').use((socket, next) => {

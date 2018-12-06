@@ -29,7 +29,8 @@ router.post('/create/:username', (req, res, next) => {
                     username: req.body.username,
                     roomid: req.body.roomid,
                     timeCreated: req.body.timeCreated,
-                    status: req.body.status
+                    status: req.body.status,
+                    role: req.body.role
                 })
         
                 player.save((err, result) => {
@@ -40,7 +41,9 @@ router.post('/create/:username', (req, res, next) => {
         
                     else 
                         res.send('not ok')
+
                 })
+
             }
 
             //if exists, return
@@ -71,6 +74,7 @@ router.get('/:username', (req, res, next) => {
                 res.send("ok")
             else
                 res.send("not found")
+
         })
     })
 })
@@ -95,8 +99,31 @@ router.post('/:username/update', (req, res, next) => {
                 res.send("ok")
             else
                 res.send("not ok")
+
         } )
     })
 })
 
+
+router.post('/:username/update-role', (req, res, next) => {
+    var username = req.params.username.toString().replace('-', ' ')
+
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        Player.updateOne({'username': username}, {$set: {'role': req.body.role}}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null)
+                res.send("ok")
+            else
+                res.send("not ok")
+            
+        })
+    })
+})
 module.exports = router;

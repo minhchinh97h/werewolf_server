@@ -23,7 +23,7 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
     db.once('open', () => {
 
         //to update the current player's data row in Players collection
-        Player.update({username: req.body.admin}, {$set: {roomid: req.body.roomid}}, (err, result) => {
+        Player.updateOne({username: req.body.admin}, {$set: {roomid: req.body.roomid}}, (err, result) => {
             if(err) console.log(err)
 
             //return if does not find the valid username
@@ -34,14 +34,15 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
             //proceed if finds
             else{
                 //update or create a row if it doesnt exist
-                Room.update({admin: req.body.admin}, { $set: {
+                Room.updateOne({admin: req.body.admin}, { $set: {
                                                                             'roomid': req.body.roomid, 
                                                                             'admin': req.body.admin, 
                                                                             'timeCreated': req.body.timeCreated,
                                                                             'numberOfPlayers': req.body.numberOfPlayers,
                                                                             'players': [req.body.players],
                                                                             'status': req.body.status,
-                                                                            'currentRoles': req.body.currentRoles
+                                                                            'currentRoles': req.body.currentRoles,
+                                                                            'recommendedRoles': req.body.recommendedRoles
 
                 }}, {upsert: true}, (err, result) => {
                     if(err) console.log(err)
@@ -55,8 +56,6 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
                     }
                 })
             }
-
-            return
         })
     })
 })
@@ -83,7 +82,6 @@ router.get('/:roomid', (req, res, next) => {
             else
                 res.send("not found")
 
-            return
         })
     })
 } )
@@ -114,7 +112,6 @@ router.post('/:roomid/update', (req, res, next) => {
                 res.send("not ok")
             }
 
-            return
         })
     })
 })
@@ -148,34 +145,39 @@ router.get('/:roomid/get-admin', (req, res, next) => {
 
 
 module.exports = (io) => {
+    // let roomid
+    let getAdminIO = io.of('/get-admin')
 
-    let roomid
+    // getAdminIO.use( (socket, next) => {
+    //     roomid = socket.handshake.query.roomid
 
-    io.of('/get-admin').use( (socket, next) => {
-        roomid = socket.handshake.query.roomid
-        if(roomid.length > 0)
-            return next()
+    //     if(roomid.length > 0)
+    //         return next()
 
-        return next(new Error('Cannot find room id'))
-    })
-
+    //     return next(new Error('roomid not found'))    
+    // }) 
+    getAdminIO.setMaxListeners(Infinity)
     
-    const findAdmin = async () => {
+    const findAdmin = async (roomid) => {
         await axios({
             method: 'get',
             url: 'http://192.168.1.3:3001/rooms/' + roomid + '/get-admin'
         })
         .then(res => {
-            io.of('/get-admin').emit('GetAdminAt' + roomid, res.data)
+            getAdminIO.in(roomid).emit('GetAdmin', res.data)
         })
         .catch(err => console.log(err)) 
     }
 
-    io.of('/get-admin').on('connect', socket => {
+    getAdminIO.on('connect', socket => {
 
-        findAdmin()
+        socket.on('JoinRoom', data => {
+            socket.join(data)
 
-        io.of('/get-admin').on('disconnect', () => {
+            findAdmin(data)
+        })
+
+        getAdminIO.on('disconnect', () => {
             console.log('user disconnected')
         })
     })

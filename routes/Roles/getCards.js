@@ -1,24 +1,38 @@
 var express = require('express');
 var router = express.Router();
-const MongoClient = require('mongodb').MongoClient
+const mongoose = require('mongoose')
+
 var axios = require('axios')
 var mongoUrl = 'mongodb://werewolf_minhchinh_01:Haigay1997@ds057000.mlab.com:57000/werewolf_01'
 
-router.get('/', (req, res, next) => {
-    MongoClient.connect(mongoUrl, (err, db) => {
-        if(err) console.log(err)
+var roleSchema = require('../../mongoose-schema/roleSchema')
 
-        db.collection('Roles').find({}, {cardName: 1, description: 1, _id: 0}).toArray( (err, result) => {
-            if(err) console.log(err)
+var Role = mongoose.model('Role', roleSchema)
+
+router.get('/', (req, res, next) => {
+    roomid = req.params.roomid
+
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+
+        Role.find({}, {'name': 1, 'description': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
 
             res.send(result)
+
+            db.close()
         })
 
     })
 })
 
 module.exports = (io) => {
-
+    io.of('get-cards').setMaxListeners(Infinity)
     const getCards = async (socket) => {
         await axios({
             method: 'get',

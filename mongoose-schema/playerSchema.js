@@ -11,7 +11,8 @@ var playerSchema = new mongoose.Schema({
         connected: String,
         hypnotized: Number,
         changed: Number
-    }
+    },
+    role: String
 
 })
 

@@ -10,7 +10,57 @@ var roomSchema = new mongoose.Schema({
         type: String,
         enum: ['open', 'full', 'ongoing']
     },
-    currentRoles: [String]
+    currentRoles: {
+        'Werewolves': Number,
+        'Ordinary Townsfolk': Number,
+        'Seer/ Fortune Teller': Number,
+        'Hunter': Number,
+        'Cupid': Number,
+        'Witch': Number,
+        'Little Girl': Number,
+        'Sheriff': Number,
+        'Thief': Number,
+        'The village Idiot': Number,
+        'The ancient': Number,
+        'The scapegoat': Number,
+        'The savior': Number,
+        'The pied piper': Number,
+        'The villager villager': Number,
+        'The two sisters': Number,
+        'The three brothers': Number,
+        'The knight with the rusty sword': Number,
+        'The fox': Number,
+        'The bear leader': Number,
+        'The devoted servant': Number,
+        'The wild child': Number,
+        'The dog wolf': Number
+    },
+    recommendedRoles: {
+        'Werewolves': Number,
+        'Ordinary Townsfolk': Number,
+        'Seer/ Fortune Teller': Number,
+        'Hunter': Number,
+        'Cupid': Number,
+        'Witch': Number,
+        'Little Girl': Number,
+        'Sheriff': Number,
+        'Thief': Number,
+        'The village Idiot': Number,
+        'The ancient': Number,
+        'The scapegoat': Number,
+        'The savior': Number,
+        'The pied piper': Number,
+        'The villager villager': Number,
+        'The two sisters': Number,
+        'The three brothers': Number,
+        'The knight with the rusty sword': Number,
+        'The fox': Number,
+        'The bear leader': Number,
+        'The devoted servant': Number,
+        'The wild child': Number,
+        'The dog wolf': Number,
+        'totalCards': Number
+    }
 })
 
 module.exports = roomSchema
