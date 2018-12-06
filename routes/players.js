@@ -104,7 +104,7 @@ router.post('/:username/update', (req, res, next) => {
     })
 })
 
-
+//update user's role
 router.post('/:username/update-role', (req, res, next) => {
     var username = req.params.username.toString().replace('-', ' ')
 
