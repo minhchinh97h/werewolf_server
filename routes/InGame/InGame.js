@@ -28,6 +28,28 @@ router.get('/:roomid/get-game-info', (req, res, next) => {
     })
 })
 
+router.post('/:roomid/retrieve-game-turn', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => { 
+        Room.findOne( { 'roomid': req.params.roomid }, {'callingOrder': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                if(req.body.data.flag === "start"){
+                    res.send(result.callingOrder[0])
+                }
+            }
+
+        })
+    })
+
+})
+
 module.exports = (io) => {
     let inGameIO = io.of('/in-game')
 
@@ -55,5 +77,8 @@ module.exports = (io) => {
         })
     })
 
+    inGameIO.on('RequestToStartTheGame', data => {
+
+    })
     return router
 }
