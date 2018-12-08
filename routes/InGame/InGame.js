@@ -28,7 +28,7 @@ router.get('/:roomid/get-game-info', (req, res, next) => {
     })
 })
 
-router.post('/:roomid/retrieve-game-turn', (req, res, next) => {
+router.post('/:roomid/retrieve-first-turn', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
     var db = mongoose.connection
@@ -77,8 +77,23 @@ module.exports = (io) => {
         })
     })
 
-    inGameIO.on('RequestToStartTheGame', data => {
+    inGameIO.on('RequestToStartTheGame1stRound', data => {
+        inGameIO.in(data).emit('RetrieveGameStart1stRound', 'ok')
+    })
 
+
+    const getTheFirstTurn = async (roomid) => {
+        await axios({
+            method: 'get',
+            url: 'http://192.168.1.3:3001/in-game/' + roomid + '/retrieve-first-turn'
+        })
+        .then(res => {
+            inGameIO.in(roomid).emit('Retrieve1stTurn', res.data)
+        })
+    }
+
+    inGameIO.on('RequestToGet1stTurn', data => {
+        getTheFirstTurn(data)
     })
     return router
 }
