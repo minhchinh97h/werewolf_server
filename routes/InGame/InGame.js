@@ -88,7 +88,7 @@ module.exports = (io) => {
             url: 'http://192.168.1.3:3001/in-game/' + roomid + '/retrieve-first-turn'
         })
         .then(res => {
-            inGameIO.in(roomid).emit('Retrieve1stTurn', res.data)
+            inGameIO.in(roomid).emit('Retrieve1stTurn', res.data.player)
         })
     }
 
