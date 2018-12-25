@@ -36,7 +36,7 @@ module.exports = (io) => {
     const getCards = async (socket) => {
         await axios({
             method: 'get',
-            url: 'http://192.168.1.3:3001/get-roles'
+            url: 'http://localhost:3001/get-roles'
         })
         .then(res => {
             socket.emit('GetCards', res.data)

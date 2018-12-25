@@ -24,6 +24,7 @@ var updateRolesLimitRouter = require('./routes/Roles/updateRolesLimit')(io)
 var updateCurrentRolesRouter = require('./routes/Roles/updateCurrentRoles')(io)
 var startGameRouter = require('./routes/StartGame/startGame')(io)
 var inGameRouter = require('./routes/InGame/InGame')(io)
+var seerActionRouter = require('./routes/InGame/actions/seer/Seer')(io)
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -46,6 +47,10 @@ app.use('/update-roles-limit', updateRolesLimitRouter)
 app.use('/update-current-roles', updateCurrentRolesRouter)
 app.use('/start-game', startGameRouter)
 app.use('/in-game', inGameRouter)
+app.use('/in-game/actions', seerActionRouter)
+
+
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

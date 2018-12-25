@@ -53,7 +53,7 @@ module.exports = (io) => {
     const updateCurrentRoles = async (data) => {
         await axios({
             method: 'post',
-            url: 'http://192.168.1.3:3001/update-current-roles/' + data.roomid,
+            url: 'http://localhost:3001/update-current-roles/' + data.roomid,
             data: {
                 currentRoles: data.currentRoles
             }
@@ -69,7 +69,7 @@ module.exports = (io) => {
     const getCurrentRoles = async (roomid) => {
         await axios({
             method: 'get',
-            url: 'http://192.168.1.3:3001/update-current-roles/' + roomid
+            url: 'http://localhost:3001/update-current-roles/' + roomid
         })
         .then(res => {
             getCurrentRolesIO.in(roomid).emit('GetSelectedCards', res.data)

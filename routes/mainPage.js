@@ -52,7 +52,7 @@ module.exports = (io) => {
     const getPlayers = async () => {
         await axios({
             method: 'get',
-            url: 'http://192.168.1.3:3001/main-page/' + roomid
+            url: 'http://localhost:3001/main-page/' + roomid
         })
         .then(res => {
             if(res.data === "ok")

@@ -161,7 +161,7 @@ module.exports = (io) => {
     const findAdmin = async (roomid) => {
         await axios({
             method: 'get',
-            url: 'http://192.168.1.3:3001/rooms/' + roomid + '/get-admin'
+            url: 'http://localhost:3001/rooms/' + roomid + '/get-admin'
         })
         .then(res => {
             getAdminIO.in(roomid).emit('GetAdmin', res.data)

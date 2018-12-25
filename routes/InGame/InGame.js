@@ -28,7 +28,7 @@ router.get('/:roomid/get-game-info', (req, res, next) => {
     })
 })
 
-router.post('/:roomid/retrieve-first-turn', (req, res, next) => {
+router.get('/:roomid/retrieve-first-turn', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
     var db = mongoose.connection
@@ -40,9 +40,9 @@ router.post('/:roomid/retrieve-first-turn', (req, res, next) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                if(req.body.data.flag === "start"){
+                // if(req.body.data.flag === "start"){
                     res.send(result.callingOrder[0])
-                }
+                // }
             }
 
         })
@@ -58,7 +58,7 @@ module.exports = (io) => {
     const getGameInfo = async (roomid) => {
         await axios({
             method: 'get',
-            url: 'http://192.168.1.3:3001/in-game/' + roomid + '/get-game-info'
+            url: 'http://localhost:3001/in-game/' + roomid + '/get-game-info'
         })
         .then(res => {
             inGameIO.in(roomid).emit('RetrieveGameInfo', res.data)
@@ -68,8 +68,15 @@ module.exports = (io) => {
     inGameIO.on('connect', socket => {
         socket.on('JoinRoom', data => {
             socket.join(data)
+            getGameInfo(data)   
+        })
 
-            getGameInfo(data)
+        socket.on('RequestToStartTheGame1stRound', (data) => {
+            inGameIO.emit('RetrieveGameStart1stRound', 'ok')
+        })
+
+        socket.on('RequestToGet1stTurn', data => {
+            getTheFirstTurn(data)
         })
 
         inGameIO.on('disconnect', () => {
@@ -77,23 +84,20 @@ module.exports = (io) => {
         })
     })
 
-    inGameIO.on('RequestToStartTheGame1stRound', data => {
-        inGameIO.in(data).emit('RetrieveGameStart1stRound', 'ok')
-    })
 
 
     const getTheFirstTurn = async (roomid) => {
         await axios({
             method: 'get',
-            url: 'http://192.168.1.3:3001/in-game/' + roomid + '/retrieve-first-turn'
+            url: 'http://localhost:3001/in-game/' + roomid + '/retrieve-first-turn'
         })
         .then(res => {
-            inGameIO.in(roomid).emit('Retrieve1stTurn', res.data.player)
+            inGameIO.in(roomid).emit('Retrieve1stTurn', res.data.name)
         })
+        .catch(err => console.log(err))
     }
 
-    inGameIO.on('RequestToGet1stTurn', data => {
-        getTheFirstTurn(data)
-    })
+    
+
     return router
 }

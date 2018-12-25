@@ -218,13 +218,13 @@ module.exports = (io) => {
     const startGame = async (roomid) => {
         await axios({
             method: 'get',
-            url: 'http://192.168.1.3:3001/start-game/' + roomid
+            url: 'http://localhost:3001/start-game/' + roomid
         })
         .then(res => {
             res.data.playerRoles.forEach(player => {
                 axios({
                     method: 'post',
-                    url: 'http://192.168.1.3:3001/players/' + player.name.toString().replace(' ', '-') + '/update-role',
+                    url: 'http://localhost:3001/players/' + player.name.toString().replace(' ', '-') + '/update-role',
                     data: {
                         role: player.role
                     }

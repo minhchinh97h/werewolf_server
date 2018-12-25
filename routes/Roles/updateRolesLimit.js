@@ -56,7 +56,7 @@ module.exports = (io) => {
     const updateRolesLimit = async (data) => {
         await axios({
             method: 'post',
-            url: 'http://192.168.1.3:3001/update-roles-limit/' + data.roomid,
+            url: 'http://localhost:3001/update-roles-limit/' + data.roomid,
             data: {
                 rolesLimit: data.rolesLimit
             }
@@ -66,7 +66,7 @@ module.exports = (io) => {
             if(res.data === "ok"){
                 return axios({
                     method: 'get',
-                    url: 'http://192.168.1.3:3001/update-roles-limit/' + data.roomid,
+                    url: 'http://localhost:3001/update-roles-limit/' + data.roomid,
                 })
             }
             
