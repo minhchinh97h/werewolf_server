@@ -1,0 +1,25 @@
+var callingOrder = ['Seer/ Fortune Teller',
+                    'The fox',
+                    'The savior',
+                    'Cupid',
+                    'The Lovers',
+                    ['Werewolves',
+                    'The wild child',
+                    'The dog wolf', 'Little Girl'],
+                    'Witch',
+                    'The pied piper',
+                    'The charmed players',
+                    'Hunter',
+                    'Thief',
+                    'The ancient',
+                    'The scapegoat',
+                    'The knight with the rusty sword',
+                    'The bear leader',
+                    'The devoted servant',
+                    'The two sisters',
+                    'The three brothers',
+                    'The village Idiot',
+                    'Ordinary Townsfolk'
+                    ]
+
+module.exports = callingOrder

@@ -9,6 +9,9 @@ var roomSchema = require('../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var callingOrder = require('../../calling_order/CallingOrder')
+var called1stNight = require('../../calling_order/OnlyCall1stNight')
+
 router.get('/:roomid', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -42,7 +45,9 @@ router.get('/:roomid', (req, res, next) => {
                 result.players.forEach((name) => {
                     playerRoles.push({
                         name: name,
-                        role: ''
+                        role: '',
+                        order: 0,
+                        calls: 0
                     })
                 })
 
@@ -140,6 +145,18 @@ router.get('/:roomid', (req, res, next) => {
                         }
                     }
                 }
+                
+                let inGameOrder = []
+
+                //get the calling order
+                for(let i = 0; i < callingOrder.length; i++){
+                    for(let j = 0; j < playerRoles.length; j++){
+                        if(callingOrder[i] == playerRoles[j].role){
+                            playerRoles[j].order = i+1
+                        }
+                    }
+                }
+
                 res.send(playerRoles)
             }
         })

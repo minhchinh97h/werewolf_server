@@ -60,7 +60,8 @@ var roomSchema = new mongoose.Schema({
         'The wild child': Number,
         'The dog wolf': Number,
         'totalCards': Number
-    }
+    },
+    callingOrder: [String]
 })
 
 module.exports = roomSchema
