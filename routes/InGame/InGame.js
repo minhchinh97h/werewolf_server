@@ -66,9 +66,13 @@ module.exports = (io) => {
     }
 
     inGameIO.on('connect', socket => {
-        socket.on('JoinRoom', data => {
+        socket.on('JoinRoomAndGetGameInfo', data => {
             socket.join(data)
             getGameInfo(data)   
+        })
+
+        socket.on('JoinRoom', data => {
+            socket.join(data)
         })
 
         socket.on('RequestToStartTheGame1stRound', (data) => {
