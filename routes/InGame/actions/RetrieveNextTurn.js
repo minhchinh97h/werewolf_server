@@ -22,16 +22,12 @@ router.post('/:roomid/retreive-next-turn', (req, res, next) => {
 
             if(result !== null){
                 result.callingOrder.forEach((data, index) => {
-                    if(data.role === req.body.role && index < (result.callingOrder.length - 1) && req.body.startFlag !== 1){
+                    if(data.role === req.body.role && index < (result.callingOrder.length - 1)){
                         res.send(result.callingOrder[index+1])
                     }
 
-                    else if(data.role === req.body.role && index === (result.callingOrder.length -1) && req.body.startFlag !== 1){
+                    else if(data.role === req.body.role && index === (result.callingOrder.length -1)){
                         res.send("round ends")
-                    }
-
-                    else if(req.body.startFlag === 1){
-                        res.send(result.callingOrder[0])
                     }
                 })
             }
@@ -43,7 +39,28 @@ module.exports = (io) => {
 
     let rntIO = io.of('/retrieve-next-turn')
 
+    const getNextTurn = (data) => {
+        axios({
+            method: 'post',
+            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retreive-next-turn',
+            data: {
+                roomid: data.roomid,
+                role: data.role
+            }
+        })
+        .then(res => {
+            rntIO.in(data.roomid).emit('getNextTurn', res.data)
+        })
+        .catch(err => console.log(err))
+    }
 
+    rntIO.on('connect', socket => {
+        socket.on('JoinRoom', data => {
+            socket.join(data.roomid)
+
+            getNextTurn(data)
+        })
+    })
 
     return router
 }
