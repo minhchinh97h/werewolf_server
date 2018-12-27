@@ -25,6 +25,7 @@ var updateCurrentRolesRouter = require('./routes/Roles/updateCurrentRoles')(io)
 var startGameRouter = require('./routes/StartGame/startGame')(io)
 var inGameRouter = require('./routes/InGame/InGame')(io)
 var seerActionRouter = require('./routes/InGame/actions/seer/Seer')(io)
+var theFoxActionRouter = require('./routes/InGame/actions/the-fox/TheFox')(io)
 var getNextTurnRouter = require('./routes/InGame/actions/RetrieveNextTurn')(io)
 
 
@@ -52,7 +53,7 @@ app.use('/start-game', startGameRouter)
 app.use('/in-game', inGameRouter)
 app.use('/in-game/actions', seerActionRouter)
 app.use('/in-game/actions', getNextTurnRouter)
-
+app.use('/in-game/actions', theFoxActionRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

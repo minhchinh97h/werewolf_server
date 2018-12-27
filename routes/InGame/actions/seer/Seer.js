@@ -55,8 +55,6 @@ module.exports = (io) => {
     seerIO.on('connect', socket => {
         socket.on('JoinRoom', data => {
             socket.join(data.roomid)
-
-            retrieveNextTurn(data)
         })
 
         socket.on('Request', data => {
