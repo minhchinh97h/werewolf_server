@@ -138,7 +138,6 @@ router.get('/:roomid/get-admin', (req, res, next) => {
             else
                 res.send('not ok')
 
-            db.close()
         })
     })
 })
