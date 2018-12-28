@@ -21,7 +21,7 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                result.callingOrder.every((order, index) => {
+                result.callingOrder.forEach((order, index) => {
                     if(order.name === 'The Lovers'){
                         result.callingOrder[index].player = req.body.playersToConnect
                     }
