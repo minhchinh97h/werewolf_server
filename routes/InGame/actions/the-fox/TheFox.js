@@ -35,7 +35,7 @@ router.post('/:roomid/the-fox-scent', (req, res, next) => {
                     })
                 })
 
-                if(!found)
+                if(!found)  
                     res.send(false)
             }
         })
