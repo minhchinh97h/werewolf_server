@@ -24,15 +24,20 @@ router.post('/:roomid/the-fox-scent', (req, res, next) => {
 
             if(result !== null){
                 let found = false
-                req.body.players.every(player => {
+                req.body.players.every(name => {
                     result.callingOrder.every(order => {
-                        if(player === order.name && (order.role === 'Werewolves' 
-                                                    || order.role === 'The dog wolf'
-                        )){
-                            
-                            found = true
-                            res.send(true)
-                            
+                        if(order.name === 'Werewolves' || order.name === 'The dog wolf'){
+                            order.player.every((player) => {
+                                if(player === name){
+                                    found = true
+                                    res.send(true)
+                                }
+
+                                if(found)
+                                    return false
+                                else
+                                    return true
+                            })
                         }
                         
                         if(found)

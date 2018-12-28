@@ -21,11 +21,10 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                result.callingOrder.push({
-                    'name': 'The Lovers',
-                    'index': 3,
-                    'players': req.body.playersToConnect,
-                    '1stNight': true
+                result.callingOrder.every((order, index) => {
+                    if(order.name === 'The Lovers'){
+                        result.callingOrder[index].player = req.body.playersToConnect
+                    }
                 })
 
                 Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': result.callingOrder}}, (err, result) => {

@@ -148,39 +148,47 @@ router.get('/:roomid', (req, res, next) => {
 
                 callingOrder.forEach((order, index) => {
                     playerRoles.forEach((player, playerIndex) => {
+                        
                         if(order.name === player.role){
-                            if(player.role !== 'Witch'){
-                                arrangedOrder.push({
-                                    'name': player.name,
-                                    'role': player.role,
-                                    'index': index,
-                                    '1stNight': order['1stNight']
-                                })
-                            }
+                            console.log(player + ' ' + order.name)
+                            // if(player.role !== 'Witch'){
+                            //     arrangedOrder[index]({
+                            //         'name': player.name,
+                            //         'role': player.role,
+                            //         'index': index,
+                            //         '1stNight': order['1stNight']
+                            //     })
+                            // }
                             
-                            else{
-                                arrangedOrder.push({
-                                    'name': player.name,
-                                    'role': player.role,
-                                    'index': index,
-                                    '1stNight': order['1stNight'],
-                                    'useHeal': order.useHeal,
-                                    'useKill': order.useKill
-                                })
-                            }
+                            // else{
+                            //     arrangedOrder[index]({
+                            //         'name': player.name,
+                            //         'role': player.role,
+                            //         'index': index,
+                            //         '1stNight': order['1stNight'],
+                            //         'useHeal': order.useHeal,
+                            //         'useKill': order.useKill
+                            //     })
+                            // }
+                            callingOrder[index].player.push(player.name)
+                            
                         }
                     })
                 })
+                console.log(playerRoles)
+                console.log(callingOrder)
+                
 
                 //pack data to send
                 let sentData = {
-                    playerRoles: playerRoles,
-                    arrangedOrder: arrangedOrder
+                    playerRoles: playerRoles
                 }
 
 
+
+
                 //update the relevant row in rooms collection
-                Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': arrangedOrder }}, (err, result) => {
+                Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': callingOrder }}, (err, result) => {
                     if(err) return console.log(err)
 
                     if(result !== null)
@@ -221,18 +229,36 @@ module.exports = (io) => {
             url: 'http://localhost:3001/start-game/' + roomid
         })
         .then(res => {
-            res.data.playerRoles.forEach(player => {
-                axios({
-                    method: 'post',
-                    url: 'http://localhost:3001/players/' + player.name.toString().replace(' ', '-') + '/update-role',
-                    data: {
-                        role: player.role
-                    }
-                })
-                .then(res => {
-                })
-                .catch(err => console.log(err))
+            let requests = []
+
+            res.data.playerRoles.forEach((player) => {
+                requests.push(
+                    axios({
+                        method: 'post',
+                        url: 'http://localhost:3001/players/' + player.name.toString().replace(' ', '-') + '/update-role',
+                        data: {
+                            role: player.role
+                        }
+                    })
+                )
             })
+
+            axios.all(requests).then((results) => {
+
+            })
+
+            // res.data.playerRoles.forEach(player => {
+            //     axios({
+            //         method: 'post',
+            //         url: 'http://localhost:3001/players/' + player.name.toString().replace(' ', '-') + '/update-role',
+            //         data: {
+            //             role: player.role
+            //         }
+            //     })
+            //     .then(res => {
+            //     })
+            //     .catch(err => console.log(err))
+            // })
             
         })
         .catch(err => console.log(err))

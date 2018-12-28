@@ -74,12 +74,6 @@ let callingOrder = [
                         '1stNight': true
                     },
                     {
-                        'name': 'Thief',
-                        'when': 9,
-                        'player': [],
-                        '1stNight': true
-                    },
-                    {
                         'name': 'The village Idiot',
                         'when': 10,
                         'player': [],

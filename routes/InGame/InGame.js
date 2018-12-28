@@ -41,7 +41,15 @@ router.get('/:roomid/retrieve-first-turn', (req, res, next) => {
 
             if(result !== null){
                 // if(req.body.data.flag === "start"){
-                    res.send(result.callingOrder[0])
+                    result.callingOrder.every(order => {
+                        if(order.player.length !== 0){
+                            res.send(order.player[0])
+
+                            return false
+                        }
+                        else
+                            return true
+                    })
                 // }
             }
 
@@ -96,7 +104,7 @@ module.exports = (io) => {
             url: 'http://localhost:3001/in-game/' + roomid + '/retrieve-first-turn'
         })
         .then(res => {
-            inGameIO.in(roomid).emit('Retrieve1stTurn', res.data.name)
+            inGameIO.in(roomid).emit('Retrieve1stTurn', res.data)
         })
         .catch(err => console.log(err))
     }

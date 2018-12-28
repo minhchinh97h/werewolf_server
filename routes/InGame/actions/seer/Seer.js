@@ -22,10 +22,12 @@ router.post('/:roomid/seer-reveal', (req, res, next) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                result.callingOrder.forEach((data, index) => {
-                    if(data.name === req.body.player){
-                        res.send(data.role)
-                    }
+                result.callingOrder.forEach((order, index) => {
+                    order.player.forEach((player) => {
+                        if(player === req.body.player){
+                            res.send(order.name)
+                        }
+                    })
                 })
             }
         })

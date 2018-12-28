@@ -21,13 +21,15 @@ router.post('/:roomid/retreive-next-turn', (req, res, next) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                result.callingOrder.forEach((data, index) => {
-                    if(data.role === req.body.role && index < (result.callingOrder.length - 1)){
-                        res.send(result.callingOrder[index+1])
-                    }
-
-                    else if(data.role === req.body.role && index === (result.callingOrder.length -1)){
-                        res.send("round ends")
+                result.callingOrder.forEach((order, index) => {
+                    if(req.body.role === order.name && index < (result.callingOrder.length - 1)){
+                        for(let i = index + 1; i < result.callingOrder.length; i++){
+                            if(result.callingOrder[i].player.length > 0){
+                                console.log(result.callingOrder[i].player[0])
+                                res.send(result.callingOrder[i].player[0])
+                                break
+                            }
+                        }
                     }
                 })
             }
