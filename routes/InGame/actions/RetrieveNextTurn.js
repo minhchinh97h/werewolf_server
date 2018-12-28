@@ -24,7 +24,6 @@ router.post('/:roomid/retreive-next-turn', (req, res, next) => {
                 result.callingOrder.forEach((data, index) => {
                     if(data.role === req.body.role && index < (result.callingOrder.length - 1)){
                         res.send(result.callingOrder[index+1])
-                        console.log(result.callingOrder[index+1])
                     }
 
                     else if(data.role === req.body.role && index === (result.callingOrder.length -1)){

@@ -24,15 +24,27 @@ router.post('/:roomid/the-fox-scent', (req, res, next) => {
 
             if(result !== null){
                 let found = false
-                req.body.players.forEach(player => {
-                    result.callingOrder.forEach(order => {
+                req.body.players.every(player => {
+                    result.callingOrder.every(order => {
                         if(player === order.name && (order.role === 'Werewolves' 
                                                     || order.role === 'The dog wolf'
                         )){
-                            res.send(true)
+                            
                             found = true
+                            res.send(true)
+                            
                         }
+                        
+                        if(found)
+                            return false
+                        else
+                            return true
                     })
+                    
+                    if(found)
+                        return false
+                    else
+                        return true
                 })
 
                 if(!found)  
@@ -66,6 +78,7 @@ module.exports = (io) => {
         })
 
         socket.on('Request', data => {
+            data.players
             requestFoxScent(data)
         })
 
