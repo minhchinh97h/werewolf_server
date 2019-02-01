@@ -21,9 +21,24 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
             if(err) return console.log(err)
 
             if(result !== null){
+                let player1Role = '',
+                    player2Role = ''
+
                 result.callingOrder.forEach((order, index) => {
                     if(order.name === 'The Lovers'){
                         result.callingOrder[index].player = req.body.playersToConnect
+                    }
+                    
+                    if(order.player.length > 0){
+                        for(let i = 0; i < order.player.length; i++){
+                            if(order.player[i] === req.body.playersToConnect[0]){
+                                player1Role = order.name
+                            }
+
+                            else if (order.player[i] === req.body.playersToConnect[1]){
+                                player2Role = order.name
+                            }
+                        }
                     }
                 })
 
@@ -31,10 +46,18 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
                     if(err) return console.log(err)
 
                     if(result !== null){
-                        res.send({
-                            player1: req.body.playersToConnect[0],
-                            player2: req.body.playersToConnect[1]
-                        })
+
+                        res.send(new Array[
+                            {
+                                player: req.body.playersToConnect[0],
+                                role: player1Role
+                            },
+
+                            {
+                                player: req.body.playersToConnect[1],
+                                player2Role: player2Role
+                            }
+                        ])
                     }
                 })
             }
@@ -44,6 +67,8 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
 
 module.exports = (io) => {
     let cupidIO = io.of('cupid')
+
+    let inGameIO = io.of('in-game')
 
     const requestConnect = async (data) => {
         await axios({
@@ -55,9 +80,13 @@ module.exports = (io) => {
         })
         .then(res => {
             cupidIO.emit('ConnectedPlayers', res.data)
+
+
+            inGameIO.in(data.roomid).emit('RevealLovers', res.data)
         })
         .catch(err => console.log(err))
     }
+
 
     cupidIO.on('connect', (socket) => {
         socket.on('RequestToConnectPlayers', data => {
