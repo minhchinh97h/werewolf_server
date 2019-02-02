@@ -74,7 +74,7 @@ router.post('/:roomid/bear-scent', (req, res, next) => {
 
 module.exports = (io) => {
 
-    let bearIO = io.of(bearIO)
+    let bearIO = io.of('bear')
 
     let ScentPlayer = async (data) => {
         await axios({

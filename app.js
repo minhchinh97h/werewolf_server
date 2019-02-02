@@ -29,6 +29,8 @@ var inGameRouter = require('./routes/InGame/InGame')(io)
 var seerActionRouter = require('./routes/InGame/actions/seer/Seer')(io)
 var theFoxActionRouter = require('./routes/InGame/actions/the-fox/TheFox')(io)
 var cupidActionRouter = require('./routes/InGame/actions/cupid/Cupid')(io)
+var bearActionRouter = require('./routes/InGame/actions/bear/Bear')(io)
+
 
 var getNextTurnRouter = require('./routes/InGame/actions/RetrieveNextTurn')(io)
 
@@ -59,6 +61,8 @@ app.use('/in-game/actions', seerActionRouter)
 app.use('/in-game/actions', getNextTurnRouter)
 app.use('/in-game/actions', theFoxActionRouter)
 app.use('/in-game/actions', cupidActionRouter)
+app.use('/in-game/actions', bearActionRouter)
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
