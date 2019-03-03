@@ -30,6 +30,12 @@ let callingOrder = [
                         '1stNight': false
                     },
                     {
+                        'name': 'Werewolves current target',
+                        'player': [],
+                        'chosen': String,
+                        '1stNight': false
+                    },
+                    {
                         'name': 'The wild child',
                         'when': 5,
                         'player': [],
@@ -54,12 +60,24 @@ let callingOrder = [
                         '1stNight': false
                     },
                     {
+                        'name': 'Savior protect target',
+                        'player': String
+                    },
+                    {
                         'name': 'Witch',
                         'when': 7,
                         'player': [],
                         '1stNight': false,
                         'useHeal': false,
                         'useKill': false
+                    },
+                    {
+                        'name' : 'Witch kill target',
+                        'player': String
+                    },
+                    {
+                        'name' : 'Witch protect target',
+                        'player': String
                     },
                     {
                         'name': 'Hunter',

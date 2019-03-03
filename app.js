@@ -30,7 +30,10 @@ var seerActionRouter = require('./routes/InGame/actions/seer/Seer')(io)
 var theFoxActionRouter = require('./routes/InGame/actions/the-fox/TheFox')(io)
 var cupidActionRouter = require('./routes/InGame/actions/cupid/Cupid')(io)
 var bearActionRouter = require('./routes/InGame/actions/bear/Bear')(io)
-
+var piperActionRouter = require('./routes/InGame/actions/piper/Piper')(io)
+var witchActionRouter = require('./routes/InGame/actions/witch/witch')(io)
+var werewolvesActionRouter = require('./routes/InGame/actions/werewolves/Werewolves')(io)
+var saviorActionRouter = require('./routes/InGame/actions/savior/Savior')(io)
 
 var getNextTurnRouter = require('./routes/InGame/actions/RetrieveNextTurn')(io)
 
@@ -62,6 +65,10 @@ app.use('/in-game/actions', getNextTurnRouter)
 app.use('/in-game/actions', theFoxActionRouter)
 app.use('/in-game/actions', cupidActionRouter)
 app.use('/in-game/actions', bearActionRouter)
+app.use('/in-game/actions', piperActionRouter)
+app.use('/in-game/actions', witchActionRouter)
+app.use('/in-game/actions', werewolvesActionRouter)
+app.use('/in-game/actions', saviorActionRouter)
 
 
 // catch 404 and forward to error handler

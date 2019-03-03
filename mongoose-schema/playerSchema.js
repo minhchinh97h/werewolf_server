@@ -5,12 +5,8 @@ var playerSchema = new mongoose.Schema({
     roomid: String,
     timeCreated: Number,
     status: {
-        alive: Number,
         dead: Number,
-        silence: Number,
-        connected: String,
-        hypnotized: Number,
-        changed: Number
+        silence: Number
     },
     role: String,
     currentAction: Object

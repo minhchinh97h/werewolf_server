@@ -61,7 +61,8 @@ var roomSchema = new mongoose.Schema({
         'The dog wolf': Number,
         'totalCards': Number
     },
-    callingOrder: [Object]
+    callingOrder: [Object],
+    playerCurrentStatus: [Object]
 })
 
 module.exports = roomSchema
