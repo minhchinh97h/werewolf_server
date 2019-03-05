@@ -184,11 +184,17 @@ router.get('/:roomid', (req, res, next) => {
                     playerRoles: playerRoles
                 }
 
+                //Eliminate fields that are not selected
+                var newCallingOrder = []
 
+                callingOrder.forEach((order, i) => {
+                    if(order.special || order.player.length > 0)
+                        newCallingOrder.push(order)
+                })  
 
 
                 //update the relevant row in rooms collection
-                Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': callingOrder }}, (err, result) => {
+                Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': newCallingOrder }}, (err, result) => {
                     if(err) return console.log(err)
 
                     if(result !== null)

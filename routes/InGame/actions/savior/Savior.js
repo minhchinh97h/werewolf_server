@@ -79,9 +79,9 @@ module.exports = (io) => {
     }
 
     saviorIO.on('connect', (socket) => {
-        socket.on('RequestToProtectPlayer', data){
+        socket.on('RequestToProtectPlayer', data => {
             RequestToProtectPlayer(data)
-        }
+        })
     })
     return router
 }

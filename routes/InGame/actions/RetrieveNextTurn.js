@@ -26,14 +26,19 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
                 var callingOrder = result.callingOrder
 
                 callingOrder.forEach((order, index) => {
-                    if(req.body.role === order.name && index < (callingOrder.length - 1)){
-                        for(let i = index + 1; i < callingOrder.length; i++){
+                    if(req.body.role === order.name){
+                        if(index < (callingOrder.length - 1)){
+                            for(let i = index + 1; i < callingOrder.length; i++){
 
-                            if(callingOrder[i].player.length > 0){
-                                res.send(callingOrder[i].player[0])
-                                break
+                                if(callingOrder[i].player.length > 0){
+                                    res.send(callingOrder[i].player[0])
+                                    break
+                                }
                             }
-
+                        }
+                        
+                        else{
+                            res.send("round ends")
                         }
                     }
                 })
@@ -75,14 +80,14 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
             }
         })
     })
-
 })
 
 
 module.exports = (io) => {
 
     let rntIO = io.of('/retrieve-next-turn'),
-        wwIO = io.of('/werewolves')
+        wwIO = io.of('/werewolves'),
+        reIO = io.of('/retrieve-round-ends')
 
     const getNextTurn = (data) => {
         
@@ -95,7 +100,17 @@ module.exports = (io) => {
             }
         })
         .then(res => {
-            rntIO.in(data.roomid).emit('getNextTurn', res.data)
+            if(res.data !== "round ends")
+                rntIO.in(data.roomid).emit('getNextTurn', res.data)
+            
+            else
+                return axios({
+                    method: 'get',
+                    url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-round-ends'
+                })
+        })
+        .then(res => {
+            reIO.in(data.roomid).emit('RoundEnds', res.data)
         })
         .catch(err => console.log(err))
     }

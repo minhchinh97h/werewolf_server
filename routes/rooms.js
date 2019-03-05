@@ -147,14 +147,7 @@ module.exports = (io) => {
     // let roomid
     let getAdminIO = io.of('/get-admin')
 
-    // getAdminIO.use( (socket, next) => {
-    //     roomid = socket.handshake.query.roomid
-
-    //     if(roomid.length > 0)
-    //         return next()
-
-    //     return next(new Error('roomid not found'))    
-    // }) 
+    
     getAdminIO.setMaxListeners(Infinity)
     
     const findAdmin = async (roomid) => {

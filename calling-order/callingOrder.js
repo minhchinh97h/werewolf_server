@@ -19,7 +19,7 @@ let callingOrder = [
                     },
                     {
                         'name': 'The Lovers',
-                        'when': 4,
+                        'special': true,
                         'player': [],
                         '1stNight': true
                     },
@@ -31,6 +31,7 @@ let callingOrder = [
                     },
                     {
                         'name': 'Werewolves current target',
+                        'special': true,
                         'player': [],
                         'chosen': String,
                         '1stNight': false
@@ -61,6 +62,7 @@ let callingOrder = [
                     },
                     {
                         'name': 'Savior protect target',
+                        'special': true,
                         'player': String
                     },
                     {
@@ -73,10 +75,12 @@ let callingOrder = [
                     },
                     {
                         'name' : 'Witch kill target',
+                        'special': true,
                         'player': String
                     },
                     {
                         'name' : 'Witch protect target',
+                        'special': true,
                         'player': String
                     },
                     {
@@ -135,7 +139,7 @@ let callingOrder = [
                     },
                     {
                         'name': 'The hypnotized',
-                        'when': 15,
+                        'special': true,
                         'player': [],
                         '1stNight': false
                     },
