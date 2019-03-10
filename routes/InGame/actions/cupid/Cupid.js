@@ -66,11 +66,11 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
 })
 
 module.exports = (io) => {
-    let cupidIO = io.of('cupid')
+    let cupidIO = io.of('/cupid')
 
-    let inGameIO = io.of('in-game')
+    let inGameIO = io.of('/in-game')
 
-    const requestConnect = async (data) => {
+    const requestConnect = async (data, socket) => {
         await axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/cupid-connect',
@@ -79,7 +79,7 @@ module.exports = (io) => {
             }
         })
         .then(res => {
-            cupidIO.emit('ConnectedPlayers', res.data)
+            socket.emit('ConnectedPlayers', res.data)
 
 
             inGameIO.in(data.roomid).emit('RevealLovers', res.data)
@@ -90,7 +90,7 @@ module.exports = (io) => {
 
     cupidIO.on('connect', (socket) => {
         socket.on('RequestToConnectPlayers', data => {
-            requestConnect(data)
+            requestConnect(data, socket)
         })
     })
     return router

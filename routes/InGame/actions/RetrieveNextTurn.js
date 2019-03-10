@@ -110,6 +110,7 @@ module.exports = (io) => {
                 })
         })
         .then(res => {
+            //res.data of GET request is from RetrieveRoundEnds.js and also the joinning room action of reIO
             reIO.in(data.roomid).emit('RoundEnds', res.data)
         })
         .catch(err => console.log(err))
@@ -132,7 +133,6 @@ module.exports = (io) => {
     rntIO.on('connect', socket => {
         socket.on('JoinRoom', data => {
             socket.join(data)
-
         })
 
         socket.on('RequestToGetNextTurn', (data) => {

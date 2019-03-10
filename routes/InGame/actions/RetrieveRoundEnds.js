@@ -20,32 +20,106 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
 
     db.on('error', console.error.bind(console, 'connection error: '))
 
-    db.once('open', () => { 
-        Player.find({'roomid': req.params.roomid}).toArray((err, result) => {
-            if(err) return console.log(err)
+    db.once('open', () => {
 
-            if(result !== null){
+        //Announce the deaths and silences
+        let getThedeathsAndSilences = new Promise((resolve, reject) => {
+            Player.find({'roomid': req.params.roomid}).toArray((err, result) => {
+                if(err) return reject(err)
+    
+                if(result !== null){
+    
+                    var sendingData = {
+                        dead: [],
+                        silence: String
+                    }
+    
+                    result.forEach((data, i) => {
+                        if(data.status.dead > 0)
+                            sendingData.dead.push(data.username)
+                        else
+                            if(data.status.silence > 0)
+                                sendingData.silence = data.username
+                    })
+    
+                    // res.send(sendingData)
 
-                var sendingData = {
-                    dead: [],
-                    silence: String
+                    resolve(sendingData)
                 }
 
-                result.forEach((data, i) => {
-                    if(data.status.dead > 0)
-                        sendingData.dead.push(data.username)
-                    else
-                        if(data.status.silence > 0)
-                            sendingData.silence = data.username
-                })
-
-                res.send(sendingData)
-            }
+                else
+                    reject("no such document")
+            })
         })
+
+        getThedeathsAndSilences
+        .then((sendingData) => {
+
+            //find and update the deaths so that callingOrder only contains alive players in a local variable
+            return new Promise((resolve, reject) => {
+                Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+                    if(err) return reject(err)
+        
+                    if(result.callingOrder){
+                        let callingOrder = result.callingOrder,
+                            sendingData2
+        
+                        callingOrder.forEach((order, i) => {
+                            order.player.forEach((player, index, playerArr) => {
+                                if(sendingData.dead.contains(player))
+                                    playerArr.splice(index, 1)
+                            })
+                        })
+
+                        //sending includes the deaths and silences from the first db call and the updated callingOrder from this db call
+                        sendingData2 = {
+                            sendingData: sendingData,
+                            callingOrder: callingOrder
+                        }
+                        resolve(sendingData2)
+                    }
+
+                    else
+                        reject("no such document")
+                })
+            })
+        })
+        .then((sendingData2) => {
+
+            //update the local variable callingOrder into Room collection
+            return new Promise ((resolve, reject) => {
+                Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': sendingData2.callingOrder}}, (err, result) => {
+                    if(err) return reject(err)
+
+                    if(result.callingOrder){
+                        resolve(sendingData2.sendingData)
+                    }
+
+                    else
+                        reject("no such document")
+                })
+            })
+        })
+        .then((response) => {
+            res.send(response)
+        })
+        .catch((err) => {
+            //err from rejection
+            console.log(err)
+        })
+        
     })
 })
 
 module.exports = (io) => {
+
+    let rreIO = io.of('/retrieve-round-ends')
+
+    rreIO.on('connect', (socket) => {
+        socket.on('JoinRoom', roomid => {
+            socket.join(roomid)
+        })
+    })
 
     return router
 }

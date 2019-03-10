@@ -40,8 +40,8 @@ module.exports = (io) => {
 
     let seerIO = io.of('/seer')
 
-    const revealPlayerRole = async (data) => {
-        await axios({
+    const revealPlayerRole = (data, socket) => {
+        axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/seer-reveal',
             data: {
@@ -49,18 +49,15 @@ module.exports = (io) => {
             }
         })
         .then(res => {
-            seerIO.emit('RevealPlayer', res.data)
+            socket.emit('RevealPlayer', res.data)
         })
         .catch(err => console.log(err))
     }
 
     seerIO.on('connect', socket => {
-        socket.on('JoinRoom', data => {
-            socket.join(data.roomid)
-        })
 
         socket.on('Request', data => {
-            revealPlayerRole(data)
+            revealPlayerRole(data, socket)
         })
 
         seerIO.on('disconnect', () => {

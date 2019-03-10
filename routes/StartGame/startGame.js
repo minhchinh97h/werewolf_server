@@ -250,22 +250,9 @@ module.exports = (io) => {
             })
 
             axios.all(requests).then((results) => {
-
+                
+                startGameIO.in(roomid).emit('RedirectToGameRoom', "ok")
             })
-
-            // res.data.playerRoles.forEach(player => {
-            //     axios({
-            //         method: 'post',
-            //         url: 'http://localhost:3001/players/' + player.name.toString().replace(' ', '-') + '/update-role',
-            //         data: {
-            //             role: player.role
-            //         }
-            //     })
-            //     .then(res => {
-            //     })
-            //     .catch(err => console.log(err))
-            // })
-            
         })
         .catch(err => console.log(err))
     } 
@@ -277,7 +264,7 @@ module.exports = (io) => {
 
         socket.on('start', data => {
             startGame(data)
-            startGameIO.in(data).emit('RedirectToGameRoom', "ok")
+            // startGameIO.in(data).emit('RedirectToGameRoom', "ok")
         })
 
         startGameIO.on('disconnect', () => {

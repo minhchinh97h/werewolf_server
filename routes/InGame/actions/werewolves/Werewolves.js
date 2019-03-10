@@ -76,6 +76,10 @@ module.exports = (io) => {
     }
 
     wwIO.on('connect', (socket) => {
+        socket.on('JoinRoom', roomid => {
+            socket.join(roomid)
+        })
+        
         socket.on('RequestMyChoice', data => {
             wwIO.in(data.roomid).emit('OtherChoices', data)
         })

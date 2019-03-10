@@ -192,37 +192,37 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
 module.exports = (io) => {
     let witchIO = io.of('/witch')
 
-    const RequestToKillPlayer = (data) => {
+    const RequestToKillPlayer = (data, socket) => {
         axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/witch-kill',
             data: data
         })
         .then((res) => {
-            witchIO.in(data.roomid).emit('KillPlayer', res.data)
+            socket.emit('KillPlayer', res.data)
         })
         .catch(err => console.log(err))
     }
 
-    const RequestToProtectPlayer = (data) => {
+    const RequestToProtectPlayer = (data, socket) => {
         axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/witch-protect',
             data: data
         })
         .then((res) => {
-            witchIO.in(data.roomid).emit('ProtectPlayer', res.data)
+            socket.emit('ProtectPlayer', res.data)
         })
         .catch(err => console.log(err))
     }
 
     witchIO.on('connect', (socket) => {
         socket.on('RequestToKillPlayer', data => {
-            RequestToKillPlayer(data)
+            RequestToKillPlayer(data, socket)
         })
 
         socket.on('RequestToProtectPlayer', data => {
-            RequestToProtectPlayer(data)
+            RequestToProtectPlayer(data, socket)
         })
     })
 

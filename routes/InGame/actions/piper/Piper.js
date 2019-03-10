@@ -73,7 +73,7 @@ router.get('/:roomid/piper-charm', (req, res, next) => {
 })
 
 module.exports = (io) => {
-    let piperIO = io.of("piper")
+    let piperIO = io.of("/piper")
 
     const requestToCharm = async (data) => {
         await axios({
@@ -84,13 +84,13 @@ module.exports = (io) => {
             }
         })
         .then((res) => {
-            piperIO.emit("CharmedPlayers", res.data)
+            socket.emit("CharmedPlayers", res.data)
 
             getAllHypnotized(data)
             
         })
         .then((res) => {
-            piperIO.emit("GetListOfCharmed", res.data)
+            piperIO.in(data.roomid).emit("GetListOfCharmed", res.data)
         })
         .catch((err) => {
             console.log(err)
@@ -105,8 +105,12 @@ module.exports = (io) => {
     }
 
     piperIO.on("connect", (socket) => {
+        socket.on("JoinRoom", data => {
+            socket.join(data.roomid)
+        })
+        
         socket.on("RequestToCharmPlayers", data => {
-            requestToCharm(data)
+            requestToCharm(data, socket)
         })
     })
     return router

@@ -92,6 +92,7 @@ module.exports = (io) => {
 
     bearIO.on('connect', (socket) => {
         socket.on('RequestToScentPlayer', data => {
+            socket.join(data.roomid)
             ScentPlayer(data)
         })
     })

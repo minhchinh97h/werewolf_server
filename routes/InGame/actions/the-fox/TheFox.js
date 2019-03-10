@@ -63,8 +63,8 @@ router.post('/:roomid/the-fox-scent', (req, res, next) => {
 module.exports = (io) => {
     let foxIO = io.of('/the-fox')
 
-    const requestFoxScent = async (data) => {
-        await axios({
+    const requestFoxScent = (data, socket) => {
+        axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/the-fox-scent',
             data: {
@@ -72,19 +72,15 @@ module.exports = (io) => {
             }
         })
         .then(res => {
-            foxIO.emit('GetScentPlayers', res.data)
+            socket.emit('GetScentPlayers', res.data)
         })
         .catch(err => console.log(err))
     }
 
     foxIO.on('connect', (socket) => {
-        socket.on('JoinRoom', (data) => {
-            socket.join(data.roomid)
-        })
 
-        socket.on('Request', data => {
-            data.players
-            requestFoxScent(data)
+        socket.on('RequestToScent', data => {
+            requestFoxScent(data, socket)
         })
 
         socket.on('disconnect', () => {

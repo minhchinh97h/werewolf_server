@@ -156,7 +156,8 @@ module.exports = (io) => {
             url: 'http://localhost:3001/rooms/' + roomid + '/get-admin'
         })
         .then(res => {
-            getAdminIO.in(roomid).emit('GetAdmin', res.data)
+            // getAdminIO.in(roomid).emit('GetAdmin', res.data)
+            socket.emit('GetAdmin', res.data)
         })
         .catch(err => console.log(err)) 
     }
@@ -166,7 +167,9 @@ module.exports = (io) => {
         socket.on('JoinRoom', data => {
             socket.join(data)
 
-            findAdmin(data)
+            // findAdmin(data)
+
+            findAdmin(data, socket)
         })
 
         getAdminIO.on('disconnect', () => {

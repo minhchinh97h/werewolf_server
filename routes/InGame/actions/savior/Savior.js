@@ -64,14 +64,14 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
 module.exports = (io) => {
     saviorIO = io.of('/savior')
 
-    const RequestToProtectPlayer = (data) => {
+    const RequestToProtectPlayer = (data, socket) => {
         axios({
             method:'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/savior-protect',
             data: data
         })
         .then(res => {
-            saviorIO.in(data.roomid).emit('ProtectedPlayer', res.data)
+            socket.emit('ProtectedPlayer', res.data)
         })
         .catch(err => {
             console.log(err)
@@ -80,7 +80,7 @@ module.exports = (io) => {
 
     saviorIO.on('connect', (socket) => {
         socket.on('RequestToProtectPlayer', data => {
-            RequestToProtectPlayer(data)
+            RequestToProtectPlayer(data, socket)
         })
     })
     return router
