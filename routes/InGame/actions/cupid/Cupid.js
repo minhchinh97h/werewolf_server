@@ -29,7 +29,7 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
                         result.callingOrder[index].player = req.body.playersToConnect
                     }
                     
-                    if(order.player.length > 0){
+                    if(!order.special){
                         for(let i = 0; i < order.player.length; i++){
                             if(order.player[i] === req.body.playersToConnect[0]){
                                 player1Role = order.name
@@ -46,18 +46,18 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
                     if(err) return console.log(err)
 
                     if(result !== null){
+                        let sendingArray = []
+                        sendingArray.push({
+                            player: req.body.playersToConnect[0],
+                            role: player1Role
+                        })
 
-                        res.send(new Array[
-                            {
-                                player: req.body.playersToConnect[0],
-                                role: player1Role
-                            },
+                        sendingArray.push({
+                            player: req.body.playersToConnect[1],
+                            role: player2Role
+                        })
 
-                            {
-                                player: req.body.playersToConnect[1],
-                                player2Role: player2Role
-                            }
-                        ])
+                        res.send(sendingArray)
                     }
                 })
             }
@@ -80,7 +80,6 @@ module.exports = (io) => {
         })
         .then(res => {
             socket.emit('ConnectedPlayers', res.data)
-
 
             inGameIO.in(data.roomid).emit('RevealLovers', res.data)
         })

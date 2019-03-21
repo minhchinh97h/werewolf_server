@@ -42,7 +42,7 @@ router.get('/:roomid/retrieve-first-turn', (req, res, next) => {
             if(result !== null){
                 // if(req.body.data.flag === "start"){
                     result.callingOrder.every(order => {
-                        if(order.player.length !== 0){
+                        if(order.player.length !== 0 && !order.special){
                             res.send(order.player[0])
 
                             return false
@@ -73,8 +73,19 @@ module.exports = (io) => {
         })
     }
 
+    const getTheFirstTurn = (roomid) => {
+        axios({
+            method: 'get',
+            url: 'http://localhost:3001/in-game/' + roomid + '/retrieve-first-turn'
+        })
+        .then(res => {
+            inGameIO.in(roomid).emit('Retrieve1stTurn', res.data)
+        })
+        .catch(err => console.log(err))
+    }
+    
     inGameIO.on('connect', socket => {
-        socket.on('JoinRoomAndGetGameInfo', data => {
+        socket.on('JoinRoomAndGetGameInfo', data => { //Only for admin
             socket.join(data)
             getGameInfo(data)   
         })
@@ -98,16 +109,7 @@ module.exports = (io) => {
 
 
 
-    const getTheFirstTurn = async (roomid) => {
-        await axios({
-            method: 'get',
-            url: 'http://localhost:3001/in-game/' + roomid + '/retrieve-first-turn'
-        })
-        .then(res => {
-            inGameIO.in(roomid).emit('Retrieve1stTurn', res.data)
-        })
-        .catch(err => console.log(err))
-    }
+    
 
     
 

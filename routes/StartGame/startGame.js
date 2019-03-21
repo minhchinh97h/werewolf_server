@@ -12,6 +12,7 @@ var Room = mongoose.model('Room', roomSchema)
 var callingOrder = require('../../calling-order/callingOrder')
 
 router.get('/:roomid', (req, res, next) => {
+    
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
     var db = mongoose.connection
@@ -19,11 +20,11 @@ router.get('/:roomid', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => {
+        
         Room.findOne({'roomid': req.params.roomid}, {'players': 1, '_id': 0, 'currentRoles': 1}, (err, result) => {
             if(err) console.log(err)
-
+            
             if(result !== null){
-
                 let playerRoles = []
                 
                 //all the chosen roles that are not werewolves
@@ -184,7 +185,7 @@ router.get('/:roomid', (req, res, next) => {
                     playerRoles: playerRoles
                 }
 
-                //Eliminate fields that are not selected
+                //Eliminate fields that are not selected and add special roles (special roles are not assigned to player)
                 var newCallingOrder = []
 
                 callingOrder.forEach((order, i) => {
@@ -229,8 +230,8 @@ module.exports = (io) => {
 
     startGameIO.setMaxListeners(Infinity)
 
-    const startGame = async (roomid) => {
-        await axios({
+    const startGame = (roomid) => {
+        axios({
             method: 'get',
             url: 'http://localhost:3001/start-game/' + roomid
         })
@@ -250,7 +251,9 @@ module.exports = (io) => {
             })
 
             axios.all(requests).then((results) => {
-                
+                results.forEach(res => {
+                    console.log(res)
+                })
                 startGameIO.in(roomid).emit('RedirectToGameRoom', "ok")
             })
         })
@@ -264,7 +267,6 @@ module.exports = (io) => {
 
         socket.on('start', data => {
             startGame(data)
-            // startGameIO.in(data).emit('RedirectToGameRoom', "ok")
         })
 
         startGameIO.on('disconnect', () => {

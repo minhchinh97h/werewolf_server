@@ -23,11 +23,12 @@ router.post('/:roomid/seer-reveal', (req, res, next) => {
 
             if(result !== null){
                 result.callingOrder.forEach((order, index) => {
-                    order.player.forEach((player) => {
-                        if(player === req.body.player){
-                            res.send(order.name)
-                        }
-                    })
+                    if(!order.special)
+                        order.player.forEach((player) => {
+                            if(player === req.body.player){
+                                res.send(order.name)
+                            }
+                        })
                 })
             }
         })
@@ -49,6 +50,7 @@ module.exports = (io) => {
             }
         })
         .then(res => {
+            console.log(res.data)
             socket.emit('RevealPlayer', res.data)
         })
         .catch(err => console.log(err))

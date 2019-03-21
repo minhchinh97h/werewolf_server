@@ -11,7 +11,7 @@ var Player = mongoose.model('Player', playerSchema)
 
 //to create a new user info if newUserBttn clicked
 router.post('/create/:username', (req, res, next) => {
-    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+    mongoose.connect(mongoUrl, { useNewUrlParser: true})
 
     var db = mongoose.connection
 
