@@ -50,7 +50,6 @@ module.exports = (io) => {
             }
         })
         .then(res => {
-            console.log(res.data)
             socket.emit('RevealPlayer', res.data)
         })
         .catch(err => console.log(err))

@@ -33,7 +33,7 @@ let callingOrder = [
                         'name': 'Werewolves current target',
                         'special': true,
                         'player': [],
-                        'chosen': String,
+                        'chosen': '',
                         '1stNight': false
                     },
                     {
@@ -63,7 +63,7 @@ let callingOrder = [
                     {
                         'name': 'Savior protect target',
                         'special': true,
-                        'player': String
+                        'player': ''
                     },
                     {
                         'name': 'Witch',
@@ -76,12 +76,12 @@ let callingOrder = [
                     {
                         'name' : 'Witch kill target',
                         'special': true,
-                        'player': String
+                        'player': ''
                     },
                     {
                         'name' : 'Witch protect target',
                         'special': true,
-                        'player': String
+                        'player': ''
                     },
                     {
                         'name': 'Hunter',

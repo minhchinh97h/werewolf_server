@@ -9,8 +9,6 @@ var roomSchema = require('../../../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
-
-
 router.post('/:roomid/the-fox-scent', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 

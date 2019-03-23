@@ -63,13 +63,13 @@ module.exports = (io) => {
 
     inGameIO.setMaxListeners(Infinity)
 
-    const getGameInfo = async (roomid) => {
+    const getGameInfo = async (roomid, socket) => {
         await axios({
             method: 'get',
             url: 'http://localhost:3001/in-game/' + roomid + '/get-game-info'
         })
         .then(res => {
-            inGameIO.in(roomid).emit('RetrieveGameInfo', res.data)
+            socket.emit('RetrieveGameInfo', res.data)
         })
     }
 
@@ -85,9 +85,8 @@ module.exports = (io) => {
     }
     
     inGameIO.on('connect', socket => {
-        socket.on('JoinRoomAndGetGameInfo', data => { //Only for admin
-            socket.join(data)
-            getGameInfo(data)   
+        socket.on('GetGameInfo', data => {
+            getGameInfo(data, socket)   
         })
 
         socket.on('JoinRoom', data => {

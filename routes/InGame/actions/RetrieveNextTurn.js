@@ -9,6 +9,8 @@ var roomSchema = require('../../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var playerSchema = require('../../../mongoose-schema/playerSchema')
+var Player = mongoose.model('Player', playerSchema)
 
 //retrieve next turn
 router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
@@ -30,10 +32,21 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
                         if(index < (callingOrder.length - 1)){
                             for(let i = index + 1; i < callingOrder.length; i++){
 
-                                if(callingOrder[i].player.length > 0){
-                                    res.send(callingOrder[i].player[0])
-                                    break
+                                //Don't get special roles
+                                if(callingOrder[i].player.length > 0 && !callingOrder[i].special){
+                                    //Roles that not Werewolves can only be called once per player
+                                    if(callingOrder[i].name !== "Werewolves"){
+                                        res.send(callingOrder[i].player[0])
+                                        break
+                                    }
+                                    
+                                    //For Werewolves, we call all the players at one time
+                                    else{
+                                        res.send(callingOrder[i].player)
+                                        break
+                                    }
                                 }
+
                             }
                         }
                         
@@ -100,18 +113,18 @@ module.exports = (io) => {
             }
         })
         .then(res => {
-            if(res.data !== "round ends")
+            if(res.data !== "round ends"){
                 rntIO.in(data.roomid).emit('getNextTurn', res.data)
-            
+            }
             else
-                return axios({
+                axios({
                     method: 'get',
                     url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-round-ends'
                 })
-        })
-        .then(res => {
-            //res.data of GET request is from RetrieveRoundEnds.js and also the joinning room action of reIO
-            reIO.in(data.roomid).emit('RoundEnds', res.data)
+                .then(res => {
+                    //res.data of GET request is from RetrieveRoundEnds.js and also the joinning room action of reIO
+                    reIO.in(data.roomid).emit('RoundEnds', res.data)
+                })
         })
         .catch(err => console.log(err))
     }
@@ -139,10 +152,7 @@ module.exports = (io) => {
             if(data.role === 'Werewolves'){
                 getFinalKill(data)
             }
-
-            else{
-                getNextTurn(data)
-            }
+            getNextTurn(data)
         })
     })
 

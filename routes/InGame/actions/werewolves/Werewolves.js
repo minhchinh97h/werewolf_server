@@ -7,22 +7,18 @@ var mongoUrl = 'mongodb://werewolf_minhchinh_01:Haigay1997@ds057000.mlab.com:570
 
 var roomSchema = require('../../../../mongoose-schema/roomSchema')
 
-var playerSchema = require('../../../../mongoose-schema/playerSchema')
-
 var Room = mongoose.model('Room', roomSchema)
 
-var Player = mongoose.model('Player', playerSchema)
-
 //Push chosen target of each werewolve in to the database
-router.post(':roomid/werewolves-agree', (req, res, next) => {
+router.post('/:roomid/werewolves-agree', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
     var db = mongoose.connection
 
     db.on('error', console.error.bind(console, 'connection error: '))
 
-    db.once('open', () => { 
-        Room.find({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+    db.once('open', () => {
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
             if(err) return console.log(err)
 
             if(result !== null){
@@ -52,8 +48,6 @@ router.post(':roomid/werewolves-agree', (req, res, next) => {
                         res.send('ok')
                     }
                 })
-
-
             }
         })
     })
@@ -64,14 +58,17 @@ router.post(':roomid/werewolves-agree', (req, res, next) => {
 module.exports = (io) => {
     let wwIO = io.of('/werewolves')
 
-    const RequestToAgree = async (data) => {
-        await axios({
+    const RequestToAgree = (data) => {
+        axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/werewolves-agree',
             data: data
         })
         .then((res) => {
             wwIO.in(data.roomid).emit('ConfirmKillRespond', res.data)
+        })
+        .catch(err => {
+            console.log(err)
         })
     }
 

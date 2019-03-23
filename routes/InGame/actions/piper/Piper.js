@@ -17,14 +17,16 @@ router.post('/:roomid/piper-charm', (req, res, next) => {
 
     db.on('error', console.error.bind(console, 'connection error: '))
 
-    db.once('open', () => { 
+    db.once('open', () => {
         Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                result.callingOrder.forEach(order => {
+                result.callingOrder.forEach((order, index, arr) => {
                     if(order.name === 'The hypnotized'){
-                        order.player.concat(req.body.playersToCharm)
+                        req.body.playersToCharm.forEach(player => {
+                            arr[index].player.push(player)
+                        })
                     }
                 })
 
@@ -32,14 +34,17 @@ router.post('/:roomid/piper-charm', (req, res, next) => {
                     if(err) return console.log(err)
 
                     if(result !== null){
-                        res.send(new Array[
-                            {
-                                player: req.body.playersToCharm[0]
-                            },
-                            {
-                                player: req.body.playersToCharm[1]
-                            }
-                        ])
+                        let sendingArray = []
+
+                        sendingArray.push({
+                            player: req.body.playersToCharm[0]
+                        })
+
+                        sendingArray.push({
+                            player: req.body.playersToCharm[1]
+                        })
+
+                        res.send(sendingArray)
                     }
                 })
             }
@@ -73,10 +78,11 @@ router.get('/:roomid/piper-charm', (req, res, next) => {
 })
 
 module.exports = (io) => {
-    let piperIO = io.of("/piper")
+    let piperIO = io.of('/piper')
+    let inGameIO = io.of('/in-game')
 
-    const requestToCharm = async (data) => {
-        await axios({
+    const requestToCharm = (data, socket) => {
+        axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/piper-charm',
             data: {
@@ -86,29 +92,29 @@ module.exports = (io) => {
         .then((res) => {
             socket.emit("CharmedPlayers", res.data)
 
-            getAllHypnotized(data)
-            
+            // getAllHypnotized(data)
+
+            return axios({
+                method: 'get',
+                url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/piper-charm'
+            })
         })
         .then((res) => {
-            piperIO.in(data.roomid).emit("GetListOfCharmed", res.data)
+            inGameIO.in(data.roomid).emit('GetListOfCharmed', res.data)
         })
         .catch((err) => {
             console.log(err)
         })
     }
 
-    const getAllHypnotized = async (data) => {
-        return await axios({
+    const getAllHypnotized = (data) => {
+        return axios({
             method: 'get',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/piper-charm'
         })
     }
 
-    piperIO.on("connect", (socket) => {
-        socket.on("JoinRoom", data => {
-            socket.join(data.roomid)
-        })
-        
+    piperIO.on('connect', (socket) => {
         socket.on("RequestToCharmPlayers", data => {
             requestToCharm(data, socket)
         })
