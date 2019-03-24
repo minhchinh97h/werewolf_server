@@ -50,7 +50,11 @@ module.exports = (io) => {
             }
         })
         .then(res => {
-            socket.emit('RevealPlayer', res.data)
+            let socketResponseData = {
+                role: res.data,
+                username: data.player
+            }
+            socket.emit('RevealPlayer', socketResponseData)
         })
         .catch(err => console.log(err))
     }

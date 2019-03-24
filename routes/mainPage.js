@@ -47,21 +47,20 @@ module.exports = (io) => {
     //     return next(new Error('roomid does not found'))
     // })
     
-    const getPlayers = async (roomid) => {
-        await axios({
+    const getPlayers = (roomid, socket) => {
+        axios({
             method: 'get',
             url: 'http://localhost:3001/main-page/' + roomid
         })
         .then(res => {
-            io.of('/main-page').in(roomid).emit('GetPlayers', res.data)
+            socket.emit('GetPlayers', res.data)
         })
         .catch(err => console.log(err))
     }
 
     io.of('/main-page').on('connection', socket => {
-        socket.on('RequestToGetPlayersAndJoinRoom', data => {
-            socket.join(data)
-            getPlayers(data)
+        socket.on('RequestToGetPlayers', data => {
+            getPlayers(data, socket)
         })
 
         io.of('/main-page').on('disconnect', () => {

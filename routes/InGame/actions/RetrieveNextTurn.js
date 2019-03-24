@@ -25,24 +25,27 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                var callingOrder = result.callingOrder
+                let callingOrder = result.callingOrder
 
-                callingOrder.forEach((order, index) => {
+                //Sort out not special roles
+                let notSpecialRole = callingOrder.filter((order) => {return !order.special})
+
+                notSpecialRole.forEach((order, index) => {
                     if(req.body.role === order.name){
-                        if(index < (callingOrder.length - 1)){
-                            for(let i = index + 1; i < callingOrder.length; i++){
+                        if(index < (notSpecialRole.length - 1)){
+                            for(let i = index + 1; i < notSpecialRole.length; i++){
 
                                 //Don't get special roles
-                                if(callingOrder[i].player.length > 0 && !callingOrder[i].special){
+                                if(notSpecialRole[i].player.length > 0){
                                     //Roles that not Werewolves can only be called once per player
-                                    if(callingOrder[i].name !== "Werewolves"){
-                                        res.send(callingOrder[i].player[0])
+                                    if(notSpecialRole[i].name !== "Werewolves"){
+                                        res.send(notSpecialRole[i].player[0])
                                         break
                                     }
                                     
                                     //For Werewolves, we call all the players at one time
                                     else{
-                                        res.send(callingOrder[i].player)
+                                        res.send(notSpecialRole[i].player)
                                         break
                                     }
                                 }
@@ -100,7 +103,7 @@ module.exports = (io) => {
 
     let rntIO = io.of('/retrieve-next-turn'),
         wwIO = io.of('/werewolves'),
-        reIO = io.of('/retrieve-round-ends')
+        rreIO = io.of('/retrieve-round-ends')
 
     const getNextTurn = (data) => {
         
@@ -122,8 +125,9 @@ module.exports = (io) => {
                     url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-round-ends'
                 })
                 .then(res => {
+                    console.log(res.data)
                     //res.data of GET request is from RetrieveRoundEnds.js and also the joinning room action of reIO
-                    reIO.in(data.roomid).emit('RoundEnds', res.data)
+                    rreIO.in(data.roomid).emit('RoundEnds', res.data)
                 })
         })
         .catch(err => console.log(err))

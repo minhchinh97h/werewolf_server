@@ -36,7 +36,7 @@ var werewolvesActionRouter = require('./routes/InGame/actions/werewolves/Werewol
 var saviorActionRouter = require('./routes/InGame/actions/savior/Savior')(io)
 
 var getNextTurnRouter = require('./routes/InGame/actions/RetrieveNextTurn')(io)
-
+var getRoundEndsRouter = require('./routes/InGame/actions/RetrieveRoundEnds')(io)
 
 
 // view engine setup
@@ -62,6 +62,7 @@ app.use('/start-game', startGameRouter)
 app.use('/in-game', inGameRouter)
 app.use('/in-game/actions', seerActionRouter)
 app.use('/in-game/actions', getNextTurnRouter)
+app.use('/in-game/actions', getRoundEndsRouter)
 app.use('/in-game/actions', theFoxActionRouter)
 app.use('/in-game/actions', cupidActionRouter)
 app.use('/in-game/actions', bearActionRouter)

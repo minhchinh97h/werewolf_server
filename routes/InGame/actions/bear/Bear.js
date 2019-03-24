@@ -23,49 +23,28 @@ router.post('/:roomid/bear-scent', (req, res, next) => {
             if(result !== null){
                 let found = false;
 
-                result.callingOrder.forEach((order, index) => {
-                    if(order.name === req.body.player){
-                        //find the nearest left player
-                        for(let i = index - 1; i >= 0; i--){
-                            if(result.callingOrder[i].player.length > 0){
-                                if(result.callingOrder[i].name === 'Werewolves'
-                                    || result.callingOrder[i].name === 'The dog wolf'
-                                    || result.callingOrder[i].name === 'The wild child')
-                                {
-                                    found = true
-                                    break
-                                }
+                result.callingOrder.every((order, index) => {
+                    req.body.playersToScent.every(player => {
+                        if(!order.special && order.player instanceof Array && order.player.includes(player)){
+                            if(order.name === 'Werewolves'){
+                                found = true
+                                return false
                             }
                         }
 
-                        if(found){
-                            res.send(true)
-                        }
+                        return true
+                    })
 
-                        else{
-                            //find the nearest right player if the current chosen player is not the last player
-                            if(index < (result.callingOrder.length - 1)){
-                                for(let i = index + 1; i > result.callingOrder; i++){
-                                    if(result.callingOrder[i].name === 'Werewolves'
-                                        || result.callingOrder[i].name === 'The dog wolf'
-                                        || result.callingOrder[i].name === 'The wild child')
-                                    {
-                                        found = true
-                                        break
-                                    }
-                                }
-                            }
-
-                            if(found){
-                                res.send(true)
-                            }
-
-                            else{
-                                res.send(false)
-                            }
-                        }
+                    if(found){
+                        res.send(true)
+                        return false
                     }
+
+                    return true
                 })
+
+                if(!found)
+                    res.send(false)
             }
         })
     })
@@ -76,24 +55,23 @@ module.exports = (io) => {
 
     let bearIO = io.of('bear')
 
-    let ScentPlayer = async (data) => {
-        await axios({
+    const ScentPlayer = (data, socket) => {
+        axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/bear-scent',
             data: {
-                player: data.player
+                playersToScent: data.playersToScent
             }
         })
         .then(res => {
-            bearIO.emit('ScentPlayer', res.data)
+            socket.emit('ScentPlayer', res.data)
         })
         .catch(err => console.log(err))
     }
 
     bearIO.on('connect', (socket) => {
         socket.on('RequestToScentPlayer', data => {
-            socket.join(data.roomid)
-            ScentPlayer(data)
+            ScentPlayer(data, socket)
         })
     })
 

@@ -23,6 +23,8 @@ router.post('/:roomid/witch-kill', (req, res, next) => {
 
     db.once('open', () => { 
 
+        
+
         //Update the Room's calling order
         var updateRoomKill = new Promise((resolve, reject) => {
                 Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
@@ -32,24 +34,37 @@ router.post('/:roomid/witch-kill', (req, res, next) => {
                         var callingOrder = result.callingOrder
                         var canKill = false
 
+                        //If the Witch hasn't used Kill potion yet she can kill
                         callingOrder.every((order, index, callingOrder) => {
-                            if(order.name === 'Witch kill target' && order.useKill === false){
-                                callingOrder.player = req.body.target_kill
-                                callingOrder.useKill = true
-                                canKill = true
+                            if(order.name === "Witch"){
+                                if(!order.useKill){
+                                    callingOrder[index].useKill = true //update the useKill to true because she will kill one
+                                    canKill = true
+                                }
+
                                 return false
                             }
-        
+
                             return true
-        
                         })
-                        
+
                         if(canKill){
+                            //Update the Witch kill target's player
+                            callingOrder.every((order, index, callingOrder) => {
+                                if(order.name === 'Witch kill target'){
+                                    callingOrder[index].player = req.body.target_kill
+                                    return false
+                                }
+            
+                                return true
+                            })
+
+                            //Update the callingOrder in Rooms collection
                             Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': callingOrder}}, (err, result) => {
                                 if(err) return console.log(err)
             
                                 if(result !== null){
-                                    resolve(result)
+                                    resolve("Used Kill Potion")
                                 }
     
                                 else
@@ -57,9 +72,9 @@ router.post('/:roomid/witch-kill', (req, res, next) => {
                             })
                         }
 
-                        else
-                            reject('No Kill Potion Left!')
-                        
+                        else{
+                            resolve('No Kill Potion Left')
+                        }
                     }
 
                     else
@@ -68,40 +83,25 @@ router.post('/:roomid/witch-kill', (req, res, next) => {
             })  
         })   
         
-        //Update the player's status in 'Player' collection
-        var updatePlayerKill = new Promise((resolve, reject) => {
-            Player.updateOne({'roomid': req.params.roomid, 'username': req.body.target_kill}, {$inc: {'status.dead': 1}}, (err, result) => {
-                if(err) return reject(err)
+        updateRoomKill.then(result => {
+            if(result === "Used Kill Potion"){
+                //Update the player's status in 'Player' collection
+                    Player.updateOne({'roomid': req.params.roomid, 'username': req.body.target_kill}, {
+                        $inc: {'status.dead': 1}
+                    }, (err, result) => {
+                        if(err) return reject(err)
 
-                if(result !== null){
-                    resolve(result)
-                }
-                else
-                    reject('No such document')
-            })
-        })
+                        if(result !== null){
+                            res.send('ok')
+                        }
 
-        Promise.all([updateRoomKill, updatePlayerKill]).then((values) => {
-            // var receiveAll = true
+                        else
+                            res.send('No document found')
+                    })
+            }
 
-            // values.every((value, i) => {
-            //     if(value === null){
-            //         receiveAll = false
-            //         return false
-            //     }
-            //     return true
-            // })
-            
-
-            // if(receiveAll)
-            //     res.send('ok')
-            // else
-
-            res.send('ok')
-        })
-        .catch((err) => {
-            res.send('not ok')
-            console.log(err)
+            else
+                res.send(result)
         })
     })
 })
@@ -116,6 +116,7 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => { 
+        
 
         //Update the Room's calling order
         var updateRoomProtect = new Promise((resolve, reject) => {
@@ -126,25 +127,34 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
                     var callingOrder = result.callingOrder
                     var canProtect = false
 
-                    callingOrder.every((order, index, callingOrder) => {
-                        if(order.name === 'Witch protect target' && order.useHeal === false){
-                            callingOrder.player = req.body.target_protect
-                            callingOrder.useHeal = true
-                            canProtect = true
-
+                     //If the Witch hasn't used Protect potion yet she can protect
+                     callingOrder.every((order, index, callingOrder) => {
+                        if(order.name === "Witch"){
+                            if(!order.useHeal){
+                                callingOrder[index].useHeal = true //update the useKill to true because she will kill one
+                                canProtect = true
+                            }
                             return false
                         }
-    
                         return true
-    
                     })
+
+                    
                     
                     if(canProtect){
+                        callingOrder.every((order, index, callingOrder) => {
+                            if(order.name === 'Witch protect target'){
+                                callingOrder.player = req.body.target_protect
+                                return false
+                            }
+                            return true
+                        })
+
                         Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': callingOrder}}, (err, result) => {
                             if(err) return console.log(err)
         
                             if(result !== null){
-                                resolve(result)
+                                resolve("Used Heal Potion")
                             }
                             
                             else
@@ -153,7 +163,7 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
                     }
                     
                     else
-                        reject("No Heal Potion Left!")
+                        resolve("No Heal Potion Left")
                     
                 }
 
@@ -163,27 +173,31 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
             })
         })
         
-        //Update the player's status in 'Player' collection
-        var updatePlayerProtect = new Promise((resolve, reject) => {
-            Player.updateOne({'roomid': req.params.roomid, 'username': req.body.target_protect}, {$inc: {'status.dead': -1}}, (err, result) => {
-                if(err) return reject(err)
+        updateRoomProtect.then(result => {
+            if(result === 'Used Heal Potion'){
+                //Update the player's status in 'Player' collection
+                Player.updateOne({'roomid': req.params.roomid, 'username': req.body.target_protect}, {
+                    $cond: { 
+                        if: {$gt: ["$status.dead", 0]},  //only increment the status.dead value when its value is greater than 0 (meaning someone commited killing on the player)
+                        then: {$inc: {'status.dead': -1}},
+                        else: {$inc: {'status.dead': 0}}
+                    }
+                }, (err, result) => {
+                    if(err) return reject(err)
 
-                if(result !== null){
-                    resolve(result)
-                }
+                    if(result !== null){
+                        res.send('ok')
+                    }
 
-                else
-                    reject('No such document')
-            })
-        })
+                    else
+                        res.send('No document found')
+                })
+            }
 
-        Promise.all([updateRoomProtect, updatePlayerProtect]).then((values) => {
-            res.send('ok')
+            else
+                res.send(result)
         })
-        .catch(err => {
-            res.send('err')
-            console.log(err)
-        })
+        .catch(err => console.log(err))
     })
 })
 

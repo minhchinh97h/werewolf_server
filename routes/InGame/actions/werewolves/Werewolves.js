@@ -53,10 +53,37 @@ router.post('/:roomid/werewolves-agree', (req, res, next) => {
     })
 })
 
+//Get all the werewolves
+router.get('/:roomid/werewolves-get', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        Room.findOne({"roomid": req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                result.callingOrder.every((order) => {
+                    if(order.name === "Werewolves"){
+                        res.send(order.player)
+                        return false
+                    }
+
+                    return true
+                })
+            }
+        })
+    })
+})
 
 
 module.exports = (io) => {
     let wwIO = io.of('/werewolves')
+
+    wwIO.setMaxListeners(Infinity)
 
     const RequestToAgree = (data) => {
         axios({
@@ -72,11 +99,28 @@ module.exports = (io) => {
         })
     }
 
+    const GetOtherWerewolves = (roomid, socket) => {
+        axios({
+            method: 'get',
+            url: 'http://localhost:3001/in-game/actions/' + roomid + '/werewolves-get'
+        })
+        .then((res) => {
+            socket.emit('GetOtherWerewolves', res.data)
+        })
+        .catch(err => {
+            console.log(err)
+        })
+    }
+
     wwIO.on('connect', (socket) => {
         socket.on('JoinRoom', roomid => {
             socket.join(roomid)
         })
         
+        socket.on('RequestToGetOtherWerewolves', data => {
+            GetOtherWerewolves(data, socket)
+        })
+
         socket.on('RequestMyChoice', data => {
             wwIO.in(data.roomid).emit('OtherChoices', data)
         })

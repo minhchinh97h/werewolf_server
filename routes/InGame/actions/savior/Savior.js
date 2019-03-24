@@ -39,7 +39,13 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
 
         //Update Players collection's status
         var updatePlayerProtect = new Promise((resolve, reject) => {
-            Player.updateOne({'username': req.body.protectTarget}, {$inc: {'status.dead': -1}}, (err, result) => {
+            Player.updateOne({'username': req.body.protectTarget}, {
+                $cond: { 
+                    if: {$gt: ["$status.dead", 0]},  //only increment the status.dead value when its value is greater than 0 (meaning someone commited killing on the player)
+                    then: {$inc: {'status.dead': -1}},
+                    else: {$inc: {'status.dead': 0}}
+                }
+            }, (err, result) => {
                 if(err) return reject(err)
 
                 if(result !== null){

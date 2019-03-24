@@ -40,17 +40,18 @@ router.get('/:roomid/retrieve-first-turn', (req, res, next) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                // if(req.body.data.flag === "start"){
-                    result.callingOrder.every(order => {
-                        if(order.player.length !== 0 && !order.special){
-                            res.send(order.player[0])
+                result.callingOrder.every(order => {
+                    if(order.player instanceof Array && order.player.length !== 0 && !order.special){
+                        if(order.name === "Werewolves")
+                            res.send(order.player)
 
-                            return false
-                        }
                         else
-                            return true
-                    })
-                // }
+                            res.send(order.player[0])
+                        return false
+                    }
+                    else
+                        return true
+                })
             }
 
         })
@@ -83,6 +84,19 @@ module.exports = (io) => {
         })
         .catch(err => console.log(err))
     }
+
+    const getAllHypnotized = (roomid, socket) => {
+        axios({
+            method: 'get',
+            url: 'http://localhost:3001/in-game/actions/' + roomid + '/piper-charm'
+        })
+        .then((res => {
+            inGameIO.in(roomid).emit('GetListOfCharmed', res.data)
+        }))
+        .catch((err) => {
+            console.log(err)
+        })
+    }
     
     inGameIO.on('connect', socket => {
         socket.on('GetGameInfo', data => {
@@ -103,6 +117,10 @@ module.exports = (io) => {
 
         inGameIO.on('disconnect', () => {
             console.log('user disconnected')
+        })
+
+        socket.on("RequestToRetrieveCharmPlayers", data => {
+            getAllHypnotized(data, socket)
         })
     })
 

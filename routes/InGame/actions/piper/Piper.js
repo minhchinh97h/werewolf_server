@@ -92,8 +92,6 @@ module.exports = (io) => {
         .then((res) => {
             socket.emit("CharmedPlayers", res.data)
 
-            // getAllHypnotized(data)
-
             return axios({
                 method: 'get',
                 url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/piper-charm'
@@ -107,17 +105,14 @@ module.exports = (io) => {
         })
     }
 
-    const getAllHypnotized = (data) => {
-        return axios({
-            method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/piper-charm'
-        })
-    }
+    
 
     piperIO.on('connect', (socket) => {
         socket.on("RequestToCharmPlayers", data => {
             requestToCharm(data, socket)
         })
+
+        
     })
     return router
 }
