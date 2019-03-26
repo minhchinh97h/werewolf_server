@@ -87,7 +87,7 @@ module.exports = (io) => {
 
 
         updateRolesLimitIO.on('disconnect', () => {
-            console.log('user disconnected')
+            console.log('update roles limit user disconnected')
         })
     })
 

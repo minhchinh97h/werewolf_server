@@ -122,7 +122,6 @@ module.exports = (io) => {
         })
 
         socket.on('RequestMyChoice', data => {
-            console.log(data)
             wwIO.in(data.roomid).emit('OtherChoices', data)
         })
 

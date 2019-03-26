@@ -112,7 +112,9 @@ module.exports = (io) => {
             requestToCharm(data, socket)
         })
 
-        
+        socket.on('disconnect', () => {
+            console.log('the fox user disconnected')
+        })
     })
     return router
 }

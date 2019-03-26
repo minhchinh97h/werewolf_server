@@ -193,7 +193,7 @@ router.get('/:roomid', (req, res, next) => {
                         newCallingOrder.push(order)
                 })  
 
-                
+
 
                 //update the relevant row in rooms collection
                 Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': newCallingOrder }}, (err, result) => {
@@ -271,7 +271,7 @@ module.exports = (io) => {
         })
 
         startGameIO.on('disconnect', () => {
-            console.log('user disconnected')
+            console.log('start game user disconnected')
         })
     })
 

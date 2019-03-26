@@ -127,7 +127,7 @@ module.exports = (io) => {
         })
 
         inGameIO.on('disconnect', () => {
-            console.log('user disconnected')
+            console.log('in game user disconnected')
         })
 
         socket.on("RequestToRetrieveCharmPlayers", data => {

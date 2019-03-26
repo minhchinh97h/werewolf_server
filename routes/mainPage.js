@@ -80,7 +80,7 @@ module.exports = (io) => {
         })
 
         io.of('/main-page').on('disconnect', () => {
-            console.log('user disconnected')
+            console.log('main page user disconnected')
         })
     })
 

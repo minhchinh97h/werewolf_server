@@ -50,7 +50,7 @@ module.exports = (io) => {
         getCards(socket)
 
         io.of('get-cards').on('disconnect', () =>{
-            console.log('user disconnected')
+            console.log('get card user disconnected')
         })
     })
 

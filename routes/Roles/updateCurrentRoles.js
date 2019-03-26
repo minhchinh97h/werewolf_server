@@ -85,7 +85,7 @@ module.exports = (io) => {
 
 
         submitCurrentRolesIO.on('disconnect', () => {
-            console.log('user disconnected')
+            console.log('submit selected card user disconnected')
         })
     })
 
@@ -96,7 +96,7 @@ module.exports = (io) => {
         })
 
         getCurrentRolesIO.on('disconnect', () => {
-            console.log('user disconnected')
+            console.log('get current roles user disconnected')
         })
     })
     return router

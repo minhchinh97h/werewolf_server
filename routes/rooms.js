@@ -170,7 +170,7 @@ module.exports = (io) => {
         })
 
         getAdminIO.on('disconnect', () => {
-            console.log('user disconnected')
+            console.log('room user disconnected')
         })
     })
 
