@@ -1,5 +1,10 @@
 let callingOrder = [
                     {
+                        'name': 'current called role',
+                        'role': "",
+                        'special': true
+                    },
+                    {
                         'name': 'Seer/ Fortune Teller',
                         'when': 1,
                         'player': [],

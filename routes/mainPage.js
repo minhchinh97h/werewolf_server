@@ -58,7 +58,23 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
-    io.of('/main-page').on('connection', socket => {
+    const broadCastPlayers = (roomid) => {
+        axios({
+            method: 'get',
+            url: 'http://localhost:3001/main-page/' + roomid
+        })
+        .then(res => {
+            io.of('/main-page').in(roomid).emit('GetBroadCastPlayers', res.data)
+        })
+        .catch(err => console.log(err))
+    }
+
+    io.of('/main-page').on('connect', socket => {
+        socket.on('RequestToGetPlayersAndJoinRoom', roomid => {
+            socket.join(roomid)
+            broadCastPlayers(roomid)
+        })
+
         socket.on('RequestToGetPlayers', data => {
             getPlayers(data, socket)
         })

@@ -85,14 +85,14 @@ module.exports = (io) => {
 
     wwIO.setMaxListeners(Infinity)
 
-    const RequestToAgree = (data) => {
+    const RequestToAgree = (data, socket) => {
         axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/werewolves-agree',
             data: data
         })
         .then((res) => {
-            wwIO.in(data.roomid).emit('ConfirmKillRespond', res.data)
+            socket.emit('ConfirmKillRespond', res.data)
         })
         .catch(err => {
             console.log(err)
@@ -114,6 +114,7 @@ module.exports = (io) => {
 
     wwIO.on('connect', (socket) => {
         socket.on('JoinRoom', roomid => {
+            console.log(roomid)
             socket.join(roomid)
         })
         
@@ -122,11 +123,12 @@ module.exports = (io) => {
         })
 
         socket.on('RequestMyChoice', data => {
+            console.log(data)
             wwIO.in(data.roomid).emit('OtherChoices', data)
         })
 
         socket.on('RequestToAgreeKill', data => {
-            RequestToAgree(data)
+            RequestToAgree(data, socket)
         })
     })
 
