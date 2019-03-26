@@ -114,7 +114,6 @@ module.exports = (io) => {
 
     wwIO.on('connect', (socket) => {
         socket.on('JoinRoom', roomid => {
-            console.log(roomid)
             socket.join(roomid)
         })
         

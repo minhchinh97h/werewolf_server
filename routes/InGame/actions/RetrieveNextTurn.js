@@ -21,15 +21,15 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => { 
-        Room.findOne( {'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
             if(err) return console.log(err)
 
             if(result !== null){
                 let callingOrder = result.callingOrder
 
                 //Sort out not special roles
-                let notSpecialRole = callingOrder.filter((order) => {return !order.special})
-
+                let notSpecialRole = callingOrder.filter((order) => {return !order.special || order.name === "current called role"})
+                console.log(notSpecialRole)
                 notSpecialRole.forEach((order, index) => {
                     if(req.body.role === order.name){
                         if(index < (notSpecialRole.length - 1)){
@@ -37,17 +37,27 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
 
                                 //Don't get special roles
                                 if(notSpecialRole[i].player.length > 0){
-                                    //Roles that not Werewolves can only be called once per player
-                                    if(notSpecialRole[i].name !== "Werewolves"){
-                                        res.send(notSpecialRole[i].player[0])
-                                        break
-                                    }
                                     
-                                    //For Werewolves, we call all the players at one time
-                                    else{
-                                        res.send(notSpecialRole[i].player)
-                                        break
-                                    }
+                                    //Update current called role
+                                    Room.updateOne({'roomid': req.params.roomid},
+                                                    {$set: {"callingOrder.$[element].role": notSpecialRole[i].name}},
+                                                    {arrayFilters: [{"element.name": "current called role"}]}, (err, result) => {
+                                        if(err) return console.log(err)
+
+                                        if(result !== null){
+                                            //Roles that not Werewolves can only be called once per player
+                                            if(notSpecialRole[i].name !== "Werewolves"){
+                                                res.send(notSpecialRole[i].player[0])
+                                            }
+                                            
+                                            //For Werewolves, we call all the players at one time
+                                            else{
+                                                res.send(notSpecialRole[i].player)
+                                            }
+                                        }
+                                    })
+
+                                    break
                                 }
 
                             }

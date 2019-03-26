@@ -42,11 +42,22 @@ router.get('/:roomid/retrieve-first-turn', (req, res, next) => {
             if(result !== null){
                 result.callingOrder.every(order => {
                     if(order.player instanceof Array && order.player.length !== 0 && !order.special){
-                        if(order.name === "Werewolves")
-                            res.send(order.player)
+                        
+                        //Update current called role
+                        Room.updateOne({'roomid': req.params.roomid},
+                                        {$set: {"callingOrder.$[element].role": order.name}},
+                                        {arrayFilters: [{"element.name": "current called role"}]}, (err, result) => {
+                            if(err) return console.log(err)
 
-                        else
-                            res.send(order.player[0])
+                            if(result !== null){
+                                if(order.name === "Werewolves")
+                                res.send(order.player)
+
+                                else
+                                    res.send(order.player[0])
+                            }
+                        })
+
                         return false
                     }
                     else
