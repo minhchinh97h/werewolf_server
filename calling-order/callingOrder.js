@@ -35,6 +35,11 @@ let callingOrder = [
                         '1stNight': false
                     },
                     {
+                        'name': 'Werewolves end turn',
+                        'special': true,
+                        'receiveEndTurnObject': {}
+                    },
+                    {
                         'name': 'Werewolves current target',
                         'special': true,
                         'player': [],

@@ -172,13 +172,9 @@ router.get('/:roomid', (req, res, next) => {
                             //     })
                             // }
                             callingOrder[index].player.push(player.name)
-                            
                         }
                     })
                 })
-                console.log(playerRoles)
-                console.log(callingOrder)
-                
 
                 //pack data to send
                 let sentData = {
@@ -189,11 +185,28 @@ router.get('/:roomid', (req, res, next) => {
                 var newCallingOrder = []
 
                 callingOrder.forEach((order, i) => {
-                    if(order.special || order.player.length > 0)
+                    if(order.special || order.player.length > 0){
                         newCallingOrder.push(order)
+                    }
                 })  
 
+                let werewolfPlayers = newCallingOrder.map((order) => {
+                    if(order.name === "Werewolves"){
+                        return order.player
+                    }
+                })
 
+                newCallingOrder.every((order, index, arr) => {
+                    if(order.name === "Werewolves end turn"){
+                        werewolfPlayers.forEach(player => {
+                            arr[index].receiveEndTurnObject.player = false
+                        })
+
+                        return false
+                    }
+
+                    return true
+                })
 
                 //update the relevant row in rooms collection
                 Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': newCallingOrder }}, (err, result) => {
