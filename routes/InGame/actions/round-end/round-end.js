@@ -10,11 +10,155 @@ var roomSchema = require('../../../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+//If a player pressed Vote button, update the vote to round end item to check whether should proceed end voting when all the players voted
+router.post('/:roomid/request-hang-player', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => { 
+        Room.findOne({"roomid": req.params.roomid}, {"callingOrder": 1, "_id": 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                let callingOrder = result.callingOrder,
+                    receivePressedVotePlayers,
+                    allPlayersVoted = true
+
+                callingOrder.every((order, index, arr) => {
+                    if(order.name === "round end"){
+                        arr[index].receivePressedVotePlayers[req.body.player]
+                        return false
+                    }
+                    return true
+                })
+
+                callingOrder.every((order, index, arr) => {
+                    if(order.name === "round end"){
+                        receivePressedVotePlayers = order.receivePressedVotePlayers
+                        return false
+                    }
+                    return true
+                })
+
+                for(var player in receivePressedVotePlayers){
+                    if(receivePressedVotePlayers.hasOwnProperty(player)){
+                        if(!receivePressedVotePlayers[player])
+                            allPlayersVoted = false
+                    }
+                }
+
+
+                //Add chosen target into targets property of round end target
+                callingOrder.every((order, index, arr) => {
+                    if(order.name === 'round end target'){
+                        arr[index].targets.push(req.body.chosenPlayer)
+                        return false
+                    }
+
+                    return true
+                })
+
+                //If all players have voted, then we proceed to pick a player from voted players to execute based on their votes
+                if(allPlayersVoted){
+                    let targets_obj = {}, //to store voted players with their number of votes
+                        targets = [] //to store voted players
+
+                    //Update targets_obj and targets
+                    callingOrder.every((order, index, arr) => {
+                        if(order.name === 'round end target'){
+                            targets = order.targets
+
+                            order.targets.forEach((target, index) => {
+                                if(targets_obj[target])
+                                    targets_obj[target] += 1
+                                else
+                                targets_obj[target] = 0
+                            })
+
+                            return false
+                        }
+                        return true
+                    })
+
+                    let chosenTarget, //chosenTarget is the target with the largest votes, otherwise if all targets have equal number of votes, then we randomly pick one.
+                        largestVotes = 0, //The largest number of votes that one has
+                        allVotesEqual = false //To determine whether all the voted players has equal votes
+                    
+                    for(var target in targets_obj){
+                        if(targets_obj.hasOwnProperty(target)){
+                            //Find the largest number of votes
+                            if(targets_obj[target] > largestVotes){
+                                largestVotes = targets_obj[target]
+                                allVotesEqual = false 
+                                chosenTarget = target
+                            }
+
+                            //Find if all the numbers of votes are equal
+                            else if(targets_obj[target] === largestVotes){
+                                allVotesEqual = true
+                            }
+                        }
+                    }
+
+                    //pick randomly from targets array which holds all the chosen players
+                    if(allVotesEqual){
+                        chosenTarget = targets[Math.floor(Math.random() * (targets.length -1))]
+                    }
+
+                    //Update the chosenTarget into round end target of callingOrder
+                    callingOrder.every((order, index, arr) => {
+                        if(order.name === 'round end target'){
+                            arr[index].chosenTarget = chosenTarget
+                            return false
+                        }
+                        return true
+                    })
+
+                    res.send("all players voted")
+                }
+
+                else
+                    res.send("not all players voted")
+
+                //Update callingOrder into Rooms collection
+                Room.updateOne({"roomid": req.params.roomid}, {$set: {"callingOrder": callingOrder}}, (err, result) => {
+                    if(err) return console.log(err)
+
+                    if(result !== null){
+                        
+                    }
+                })
+            }
+        })
+    })
+})
+
 module.exports = (io) => {
 
     let reIO = io.of('/round-end')
 
     reIO.setMaxListeners(Infinity)
+
+
+    const requestToHangPlayer = (data) => {
+        axios({
+            method: 'post',
+            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-hang-player',
+            data: data
+        })
+        .then(res => {
+            //Make axios call to choose one from the executed players
+            if(res.data ===  "all players voted"){
+                return axios({
+                    method: ''
+                })
+            }
+        })
+        .catch(err => console.log(err))
+    }
 
     reIO.on('connect', socket => {
         socket.on('JoinRoom', roomid => {
@@ -23,6 +167,10 @@ module.exports = (io) => {
 
         socket.on('BroadCastMyChoice', data => {
             reIO.in(data.roomid).emit('GetOtherChoices', data)
+        })
+
+        socket.on('RequestToHangPlayer', data => {
+            requestToHangPlayer(data)
         })
     })
 

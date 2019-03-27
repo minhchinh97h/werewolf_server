@@ -1,5 +1,16 @@
 let callingOrder = [
                     {
+                        'name': 'round end',
+                        'special': true,
+                        'receivePressedVotePlayers': {}
+                    },
+                    {
+                        'name': 'round end target',
+                        'special': true,
+                        'targets': [],
+                        'chosenTarget': ''
+                    },
+                    {
                         'name': 'current called role',
                         'role': "",
                         'special': true

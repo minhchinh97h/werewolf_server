@@ -190,12 +190,14 @@ router.get('/:roomid', (req, res, next) => {
                     }
                 })  
 
+                //get the players that are werewolves
                 let werewolfPlayers = newCallingOrder.map((order) => {
                     if(order.name === "Werewolves"){
                         return order.player
                     }
                 })
 
+                //Update werewolves end turn item
                 newCallingOrder.every((order, index, arr) => {
                     if(order.name === "Werewolves end turn"){
                         werewolfPlayers.forEach(player => {
@@ -206,6 +208,18 @@ router.get('/:roomid', (req, res, next) => {
                     }
 
                     return true
+                })
+
+                //Update round end item
+                result.players.forEach((player) => {
+                    newCallingOrder.every((order, index, arr) => {
+                        if(order.name === "round end"){
+                            arr[index].receivePressedVotePlayers[player] = false
+                            return false
+                        }
+
+                        return true
+                    })
                 })
 
                 //update the relevant row in rooms collection
