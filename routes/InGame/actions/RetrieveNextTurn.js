@@ -183,22 +183,40 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
                     let promises = []
 
                     lovers.forEach((player, index) => {
-                        promises.push(
-                            new Promise((resolve, reject) => {
-                                //Update the lover's status in 'Players' collection
-                                Player.updateOne({'roomid': req.params.roomid, 'username': player}, {$inc: {'status.dead': 1}, $set: {'killedByWerewolves': true}}, (err, result) => {
-                                    if(err) console.log(err)
+                        if(player === chosenTarget)
+                            promises.push(
+                                new Promise((resolve, reject) => {
+                                    //Update the lover's status in 'Players' collection
+                                    Player.updateOne({'roomid': req.params.roomid, 'username': player}, {$inc: {'status.dead': 1}, $set: {'killedByWerewolves': true}}, (err, result) => {
+                                        if(err) console.log(err)
 
-                                    if(result !== null){
-                                        resolve(result)
-                                    }
+                                        if(result !== null){
+                                            resolve(result)
+                                        }
 
-                                    else{
-                                        reject("No such document")
-                                    }
+                                        else{
+                                            reject("No such document")
+                                        }
+                                    })
                                 })
-                            })
-                        )
+                            )
+                        else
+                            promises.push(
+                                new Promise((resolve, reject) => {
+                                    //Update the lover's status in 'Players' collection
+                                    Player.updateOne({'roomid': req.params.roomid, 'username': player}, {$inc: {'status.dead': 1}, $set: {'killedByWerewolves': false}}, (err, result) => {
+                                        if(err) console.log(err)
+
+                                        if(result !== null){
+                                            resolve(result)
+                                        }
+
+                                        else{
+                                            reject("No such document")
+                                        }
+                                    })
+                                })
+                            )
                     })
 
                     Promise.all(promises).then((values) => {

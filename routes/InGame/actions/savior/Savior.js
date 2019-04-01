@@ -39,52 +39,57 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
 
         //Update Players collection's status
         var updatePlayerProtect = new Promise((resolve, reject) => {
+            
             //only protect the player with dead > 0 and killed by werewolves
-            // Player.updateOne({'username': req.body.protectTarget}, {
-            //     // $cond: { 
-            //     //     $and: [
-            //     //         {
-            //     //             $gt: ["$status.dead", 0]
-            //     //         },
-            //     //         {
-            //     //             $eq : ["$killedByWerewolves", true]
-            //     //         }
-            //     //     ],
-            //     //     then: {$inc: {'status.dead': -1}},
-            //     //     else: {$inc: {'status.dead': 0}}
-            //     // }
-            //     $inc: {
-            //         $cond: [
-            //             {
-            //                 $and: [
-            //                     {
-            //                         $gt: ["$status.dead", 0]
-            //                     },
-            //                     {
-            //                         $eq : ["$killedByWerewolves", true]
-            //                     }
-            //                 ]
-            //             },
-            //             {'status.dead': -1},
-            //             {'status.dead': 0}
-            //         ]
-            //     }
-            // }, (err, result) => {
-            //     if(err) return reject(err)
-
-            //     if(result !== null){
-            //         resolve(result)
-            //     }
-
-            //     else
-            //         reject('No such result')
-            // })
-
             Player.findOneAndUpdate({'username': req.body.protectTarget, 'status.dead': {$gt: 0}, 'killedByWerewolves': true}, {$inc: {'status.dead': -1}}, (err, result) => {
                 if(err) return reject(err)
 
                 if(result !== null){
-                    resolve(result)
+                    //Find out whether the protected player is in love with anyone else then the lover should be protected as well
+                    Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+                        if(err) return reject(err)
+
+                        if(result !== null){
+                            let callingOrder = result.callingOrder,
+                                lover = ''
+                            callingOrder.every((order) => {
+                                if(order.name === "The Lovers"){
+                                    if(order.player instanceof Array && order.player.includes(req.body.protectTarget)){
+                                        order.player.every((player) => {
+                                            if(player !== req.body.protectTarget){
+                                                lover = player
+                                                return false
+                                            }
+                                            return true
+                                        })
+                                    }
+                                    return false
+                                }
+                                return true
+                            })
+
+                            //If there is a lover that is connected to the protected player then proceed salvation
+                            if(lover.length > 0){
+                                Player.findOneAndUpdate({'username': lover, 'status.dead': {$gt: 0}}, {$inc : {'status.dead': -1}}, (err, result) => {
+                                    if(err) return reject(err)
+
+                                    if(result !== null){
+                                        resolve(result)
+                                    }
+
+                                    else
+                                        reject('No such result')
+                                })
+                            }
+
+                            //If not then resolve promise
+                            else
+                                resolve(result)
+                        }
+
+                        else
+                            reject('No such result')
+                    })
                 }
 
                 else
