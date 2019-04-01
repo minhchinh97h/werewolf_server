@@ -30,6 +30,7 @@ router.post('/create/:username', (req, res, next) => {
                     roomid: req.body.roomid,
                     timeCreated: req.body.timeCreated,
                     status: req.body.status,
+                    killedByWerewolves: req.body.killedByWerewolves,
                     role: req.body.role
                 })
         

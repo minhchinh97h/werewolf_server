@@ -9,7 +9,9 @@ var roomSchema = require('../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
-var callingOrder = require('../../calling-order/callingOrder')
+var callingOrderConstructor = require('../../calling-order/callingOrder')
+
+
 
 router.get('/:roomid', (req, res, next) => {
     
@@ -25,6 +27,8 @@ router.get('/:roomid', (req, res, next) => {
             if(err) console.log(err)
             
             if(result !== null){
+                var callingOrder = new callingOrderConstructor().GetCallingOrder()
+                
                 let playerRoles = []
                 
                 //all the chosen roles that are not werewolves
@@ -222,12 +226,33 @@ router.get('/:roomid', (req, res, next) => {
                     })
                 })
 
+                //Update newCallingOrder with werewolves end turn's receiveEndTurnObject 
+                let receiveEndTurnObject = {}
+                newCallingOrder.every((order) => {
+                    if(order.name === "Werewolves"){
+                        order.player.forEach((player) => {
+                            receiveEndTurnObject[player] = false
+                        })
+                        return false
+                    }
+                    return true
+                })
+
+                newCallingOrder.every((order, index, arr) => {
+                    if(order.name === "Werewolves end turn"){
+                        arr[index].receiveEndTurnObject = receiveEndTurnObject
+                        return false
+                    }
+                    return true
+                })
+
                 //update the relevant row in rooms collection
                 Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': newCallingOrder }}, (err, result) => {
                     if(err) return console.log(err)
 
-                    if(result !== null)
+                    if(result !== null){
                         res.send(sentData)
+                    }
                     else
                         res.send('not ok')
                 })
@@ -280,7 +305,6 @@ module.exports = (io) => {
 
             axios.all(requests).then((results) => {
                 results.forEach(res => {
-                    console.log(res)
                 })
                 startGameIO.in(roomid).emit('RedirectToGameRoom', "ok")
             })

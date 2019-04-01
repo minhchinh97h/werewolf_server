@@ -39,13 +39,48 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
 
         //Update Players collection's status
         var updatePlayerProtect = new Promise((resolve, reject) => {
-            Player.updateOne({'username': req.body.protectTarget}, {
-                $cond: { 
-                    if: {$gt: ["$status.dead", 0]},  //only increment the status.dead value when its value is greater than 0 (meaning someone commited killing on the player)
-                    then: {$inc: {'status.dead': -1}},
-                    else: {$inc: {'status.dead': 0}}
-                }
-            }, (err, result) => {
+            //only protect the player with dead > 0 and killed by werewolves
+            // Player.updateOne({'username': req.body.protectTarget}, {
+            //     // $cond: { 
+            //     //     $and: [
+            //     //         {
+            //     //             $gt: ["$status.dead", 0]
+            //     //         },
+            //     //         {
+            //     //             $eq : ["$killedByWerewolves", true]
+            //     //         }
+            //     //     ],
+            //     //     then: {$inc: {'status.dead': -1}},
+            //     //     else: {$inc: {'status.dead': 0}}
+            //     // }
+            //     $inc: {
+            //         $cond: [
+            //             {
+            //                 $and: [
+            //                     {
+            //                         $gt: ["$status.dead", 0]
+            //                     },
+            //                     {
+            //                         $eq : ["$killedByWerewolves", true]
+            //                     }
+            //                 ]
+            //             },
+            //             {'status.dead': -1},
+            //             {'status.dead': 0}
+            //         ]
+            //     }
+            // }, (err, result) => {
+            //     if(err) return reject(err)
+
+            //     if(result !== null){
+            //         resolve(result)
+            //     }
+
+            //     else
+            //         reject('No such result')
+            // })
+
+            Player.findOneAndUpdate({'username': req.body.protectTarget, 'status.dead': {$gt: 0}, 'killedByWerewolves': true}, {$inc: {'status.dead': -1}}, (err, result) => {
                 if(err) return reject(err)
 
                 if(result !== null){

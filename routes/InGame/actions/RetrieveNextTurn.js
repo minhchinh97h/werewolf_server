@@ -88,6 +88,8 @@ router.post('/:roomid/retrieve-next-turn-for-werewolves', (req, res, next) => {
             if(result !== null){
                 let callingOrder = result.callingOrder,
                     werewolvesEndTurnObj
+                
+
 
                 //Update the werewolves end turn field, change its player property to true
                 callingOrder.every((order, index, arr) => {
@@ -150,23 +152,75 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                result.callingOrder.every((order, i) => {
+                let callingOrder = result.callingOrder,
+                    chosenTarget, //chosenTarget from round end target of callingOrder
+                    lovers = [],  //array holding players in case chosenTarget is in love with someone else
+                    isInLove = false //to determine whether the chosenTarget is in love
+
+
+                //Get chosenTarget from callingOrder
+                callingOrder.every((order, i) => {
                     if(order.name === 'Werewolves current target'){
-
-                        //Update the player's status in 'Player' collection
-                        Player.updateOne({'roomid': req.params.roomid, 'username': req.body.choseTarget}, {$inc: {'status.dead': 1}}, (err, result) => {
-                            if(err) console.log(err)
-
-                            if(result !== null){
-                                res.send(order.chosen)
-                                return false
-                            }
-                        })
-
+                        chosenTarget = order.chosen
+                        return false
                     }
-
                     return true
                 })
+
+                //Check whether the hanged player is in love with anyone else
+                callingOrder.every((order, index) => {
+                    if(order.name === "The Lovers"){
+                        if(order.player instanceof Array && order.player.includes(chosenTarget)){
+                            lovers = order.player
+                            isInLove = true
+                        }
+                        return false
+                    }
+                    return true
+                })
+
+                if(isInLove){
+                    let promises = []
+
+                    lovers.forEach((player, index) => {
+                        promises.push(
+                            new Promise((resolve, reject) => {
+                                //Update the lover's status in 'Players' collection
+                                Player.updateOne({'roomid': req.params.roomid, 'username': player}, {$inc: {'status.dead': 1}, $set: {'killedByWerewolves': true}}, (err, result) => {
+                                    if(err) console.log(err)
+
+                                    if(result !== null){
+                                        resolve(result)
+                                    }
+
+                                    else{
+                                        reject("No such document")
+                                    }
+                                })
+                            })
+                        )
+                    })
+
+                    Promise.all(promises).then((values) => {
+                        res.send(chosenTarget)
+                    })
+                    .catch(err => {
+                        console.log(err)
+                    })
+                }
+
+                //If only the player is killed, not in love with anyone else, then update its status in Players collection
+                else{
+                    //Update the player's status in 'Players' collection
+                    Player.updateOne({'roomid': req.params.roomid, 'username': chosenTarget}, {$inc: {'status.dead': 1}, $set: {'killedByWerewolves': true}}, (err, result) => {
+                        if(err) console.log(err)
+
+                        if(result !== null){
+                            res.send(chosenTarget)
+                            return false
+                        }
+                    })
+                }
             }
         })
     })
@@ -205,6 +259,7 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
+    //For controlling the end turn button, check whether all the werewolves end the turn so can proceed next turn
     const getWerewolfEndTurn = (data) => {
         axios({
             method: 'post',
@@ -213,6 +268,7 @@ module.exports = (io) => {
         })
         .then(res => {
             if(res.data === "all werewolves pressed"){
+                
                 getNextTurn(data)
             }
         })

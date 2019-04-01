@@ -8,6 +8,7 @@ var playerSchema = new mongoose.Schema({
         dead: Number,
         silence: Number
     },
+    killedByWerewolves: Boolean,
     role: String,
     currentAction: Object
 

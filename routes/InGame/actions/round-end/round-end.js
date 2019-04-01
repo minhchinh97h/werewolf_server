@@ -66,7 +66,7 @@ router.post('/:roomid/request-hang-player', (req, res, next) => {
                     let targets_obj = {}, //to store voted players with their number of votes
                         targets = [] //to store voted players
 
-                    //Update targets_obj and targets
+                    //Get targets_obj and targets
                     callingOrder.every((order, index, arr) => {
                         if(order.name === 'round end target'){
                             targets = order.targets
@@ -158,7 +158,8 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
                 let callingOrder = result.callingOrder,
                     chosenTarget, //chosenTarget from round end target of callingOrder
                     lovers = [],  //array holding players in case chosenTarget is in love with someone else
-                    isInLove = false //to determine whether the chosenTarget is in love
+                    isInLove = false, //to determine whether the chosenTarget is in love
+                    dead = [] //An array contains all the dead players
 
                 //Get chosenTarget
                 callingOrder.every((order, index) => {
@@ -176,7 +177,9 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
                             lovers = order.player
                             isInLove = true
                         }
+                        return false
                     }
+                    return true
                 })
 
                 if(isInLove){
@@ -191,11 +194,12 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
                     EliminateTheHangedPlayerFromCallingInTurn(chosenTarget)
                 }
 
+                //Update the callingOrder to Rooms collection
                 Room.updateOne({"roomid": req.params.roomid}, {$set: {"callingOrder": callingOrder}}, (err, result) => {
                     if(err) return console.log(err)
 
                     if(result !== null){
-                        res.send(chosenTarget)
+                        res.send(dead)
                     }
                 })
             }
@@ -204,6 +208,7 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
 })
 
 function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget){
+    dead.push(chosenTarget)
     callingOrder.forEach((order, index) => {
         if(!order.special && order.player instanceof Array){
             order.player.forEach((player, i, playerArr) => {
@@ -235,7 +240,8 @@ module.exports = (io) => {
                     url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-to-get-hang-player',
                 })
                 .then(res => {
-                    
+                    //Returning an array of dead players
+                    reIO.in(data.roomid).emit("BroadcastREDeadPlayers", res.data)
                 })
             }
         })
