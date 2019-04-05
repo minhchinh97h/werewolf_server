@@ -29,7 +29,7 @@ router.post('/:roomid/request-hang-player', (req, res, next) => {
 
                 callingOrder.every((order, index, arr) => {
                     if(order.name === "round end"){
-                        arr[index].receivePressedVotePlayers[req.body.player]
+                        arr[index].receivePressedVotePlayers[req.body.player] = true
                         return false
                     }
                     return true
@@ -185,13 +185,15 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
                 if(isInLove){
                     //Eliminate the hanged player and the related lover from callingOrder and update callingOrder
                     lovers.forEach((player) => {
-                        EliminateTheHangedPlayerFromCallingInTurn(player)
+                        dead.push(player)
+                        callingOrder = EliminateTheHangedPlayerFromCallingInTurn(player, callingOrder)
                     })
                 }
 
                 else{
                     //Eliminate the hanged player from callingOrder and update callingOrder
-                    EliminateTheHangedPlayerFromCallingInTurn(chosenTarget)
+                    dead.push(chosenTarget)
+                    callingOrder = EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder)
                 }
 
                 //Update the callingOrder to Rooms collection
@@ -207,8 +209,7 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
     })
 })
 
-function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget){
-    dead.push(chosenTarget)
+function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
     callingOrder.forEach((order, index) => {
         if(!order.special && order.player instanceof Array){
             order.player.forEach((player, i, playerArr) => {
@@ -217,6 +218,8 @@ function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget){
             })
         }
     })
+
+    return callingOrder
 }
 
 module.exports = (io) => {
@@ -240,6 +243,7 @@ module.exports = (io) => {
                     url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-to-get-hang-player',
                 })
                 .then(res => {
+                    console.log(res.data)
                     //Returning an array of dead players
                     reIO.in(data.roomid).emit("BroadcastREDeadPlayers", res.data)
                 })

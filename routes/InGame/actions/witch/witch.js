@@ -255,10 +255,10 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
-    const RequestToRetrieveLeftAbilities = (data, socket) => {
+    const RequestToRetrieveLeftAbilities = (roomid, socket) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/witch-left-abilities'
+            url: 'http://localhost:3001/in-game/actions/' + roomid + '/witch-left-abilities'
         })
         .then(res => {
             socket.emit('LeftAbilities', res.data)
@@ -275,8 +275,8 @@ module.exports = (io) => {
             RequestToProtectPlayer(data, socket)
         })
 
-        socket.on('RequestToRetrieveLeftAbilities', data => {
-            RequestToRetrieveLeftAbilities(data, socket)
+        socket.on('RequestToRetrieveLeftAbilities', roomid => {
+            RequestToRetrieveLeftAbilities(roomid, socket)
         })
     })
 

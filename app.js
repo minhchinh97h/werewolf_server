@@ -38,6 +38,7 @@ var saviorActionRouter = require('./routes/InGame/actions/savior/Savior')(io)
 var getNextTurnRouter = require('./routes/InGame/actions/RetrieveNextTurn')(io)
 var getRoundEndsRouter = require('./routes/InGame/actions/RetrieveRoundEnds')(io)
 
+var getRoundEndHandlerRouter = require('./routes/InGame/actions/round-end/round-end')(io)
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -63,6 +64,7 @@ app.use('/in-game', inGameRouter)
 app.use('/in-game/actions', seerActionRouter)
 app.use('/in-game/actions', getNextTurnRouter)
 app.use('/in-game/actions', getRoundEndsRouter)
+app.use('/in-game/actions', getRoundEndHandlerRouter)
 app.use('/in-game/actions', theFoxActionRouter)
 app.use('/in-game/actions', cupidActionRouter)
 app.use('/in-game/actions', bearActionRouter)
