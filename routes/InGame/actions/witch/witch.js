@@ -175,6 +175,7 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
         
         updateRoomProtect.then(result => {
             if(result === 'Used Heal Potion'){
+                //Only protect the player with dead > 0
                 //Update the player's status in 'Player' collection
                 Player.updateOne({'roomid': req.params.roomid, 'username': req.body.target_protect}, {
                     $cond: { 
@@ -201,7 +202,31 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
     })
 })
 
+router.get('/:roomid/witch-left-abilities', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => { 
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                let callingOrder = result.callingOrder
+
+                callingOrder.every((order, index, arr) => {
+                    if(order.name === 'Witch'){
+                        res.send(order)
+                        return false
+                    }
+                    return true
+                })
+            }
+        })
+    })
+})
 
 module.exports = (io) => {
     let witchIO = io.of('/witch')
@@ -230,6 +255,17 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
+    const RequestToRetrieveLeftAbilities = (data, socket) => {
+        axios({
+            method: 'get',
+            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/witch-left-abilities'
+        })
+        .then(res => {
+            socket.emit('LeftAbilities', res.data)
+        })
+        .catch(err => console.log(err))
+    }
+
     witchIO.on('connect', (socket) => {
         socket.on('RequestToKillPlayer', data => {
             RequestToKillPlayer(data, socket)
@@ -237,6 +273,10 @@ module.exports = (io) => {
 
         socket.on('RequestToProtectPlayer', data => {
             RequestToProtectPlayer(data, socket)
+        })
+
+        socket.on('RequestToRetrieveLeftAbilities', data => {
+            RequestToRetrieveLeftAbilities(data, socket)
         })
     })
 
