@@ -60,12 +60,27 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
                         let callingOrder = result.callingOrder,
                             sendingData2
         
-                        callingOrder.forEach((order, i) => {
+                        callingOrder.forEach((order, i, arr) => {
                             if(order.player instanceof Array)
                                 order.player.forEach((player, index, playerArr) => {
                                     if(sendingData.dead.includes(player) && sendingData.dead instanceof Array)
                                         playerArr.splice(index, 1)
                                 })
+                            
+                            if(order.name === "round end"){
+                                let receivePressedVotePlayers = order.receivePressedVotePlayers
+
+                                sendingData.dead.forEach((d) => {
+                                    if(receivePressedVotePlayers.hasOwnProperty(d)){
+                                        console.log(d)
+                                        delete receivePressedVotePlayers[d]
+                                    }
+                                })
+
+                                console.log(receivePressedVotePlayers)
+
+                                arr[i].receivePressedVotePlayers = receivePressedVotePlayers
+                            }
                         })
 
                         //sending includes the deaths and silences from the first db call and the updated callingOrder from this db call

@@ -23,8 +23,6 @@ router.post('/:roomid/witch-kill', (req, res, next) => {
 
     db.once('open', () => { 
 
-        
-
         //Update the Room's calling order
         var updateRoomKill = new Promise((resolve, reject) => {
                 Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
@@ -179,7 +177,7 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
                 //Update the player's status in 'Player' collection
                 Player.updateOne({'roomid': req.params.roomid, 'username': req.body.target_protect}, {
                     $cond: { 
-                        if: {$gt: ["$status.dead", 0]},  //only increment the status.dead value when its value is greater than 0 (meaning someone commited killing on the player)
+                        if: {"status.dead": {$gt: 0}},  //only increment the status.dead value when its value is greater than 0 (meaning someone commited killing on the player)
                         then: {$inc: {'status.dead': -1}},
                         else: {$inc: {'status.dead': 0}}
                     }
