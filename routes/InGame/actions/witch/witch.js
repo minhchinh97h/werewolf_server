@@ -173,22 +173,63 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
             if(result === 'Used Heal Potion'){
                 //Only protect the player with dead > 0
                 //Update the player's status in 'Player' collection
-                Player.findOne({'username': req.body.target_protect}, {'status': 0, '_id': 0}, (err, result) => {
-                    if(err) return reject(err)
+                Player.findOne({'username': req.body.target_protect}, {'status': 1, '_id': 0}, (err, result) => {
+                    if(err) return console.log(err)
 
                     if(result !== null){
                         let status = result.status
-
+                        
                         if(status["dead"] > 0){
                             status["dead"] -= 1
                         }
 
+                        //Proceed healing for chosen player
                         Player.updateOne({'username': req.body.target_protect}, {$set: {'status': status}}, (err, result) => {
-                            if(err) return reje(err)
+                            if(err) return console.log(err)
 
                             if(result !== null){
-                                console.log(result)
-                                res.send('ok')
+                                //Find out whether the healed player is in love with anyone else then the lover should be protected as well
+                                Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+                                    if(err) return console.log(err)
+
+                                    if(result !== null){
+                                        let callingOrder = result.callingOrder,
+                                            lover = ''
+                                        callingOrder.every((order) => {
+                                            if(order.name === "The Lovers"){
+                                                if(order.player instanceof Array && order.player.includes(req.body.target_protect)){
+                                                    order.player.every((player) => {
+                                                        if(player !== req.body.target_protect){
+                                                            lover = player
+                                                            return false
+                                                        }
+                                                        return true
+                                                    })
+                                                }
+                                                return false
+                                            }
+                                            return true
+                                        })
+
+                                        //If there is a lover that is connected to the protected player then proceed salvation
+                                        if(lover.length > 0){
+                                            Player.findOneAndUpdate({'username': lover, 'status.dead': {$gt: 0}}, {$inc : {'status.dead': -1}}, (err, result) => {
+                                                if(err) return reject(err)
+
+                                                if(result !== null){
+                                                    res.send('ok')
+                                                }
+                                            })
+                                        }
+
+                                        //If not then resolve promise
+                                        else
+                                            res.send('No document found')
+                                    }
+
+                                    else
+                                        res.send('No document found')
+                                })
                             }
 
                             else
