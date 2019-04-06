@@ -13,6 +13,38 @@ var Room = mongoose.model('Room', roomSchema)
 
 var Player = mongoose.model('Player', playerSchema)
 
+router.get('/:roomid/savior-get-last-protected', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        //Get the last protected player
+        var checkRoomProtect = new Promise((resolve, reject) => {
+            Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+                if(err) return console.log(err)
+
+                if(result !== null){
+                    let callingOrder = result.callingOrder,
+                        lastProtectedPlayer = ''
+                    
+                    callingOrder.every((order, index, arr) => {
+                        if(order.name === "Savior protect target"){
+                            lastProtectedPlayer = order.player
+                            return false
+                        }
+                        return true
+                    })
+
+                    res.send(lastProtectedPlayer)
+                }
+            })
+        })
+    })
+})
+
 router.post('/:roomid/savior-protect', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -40,6 +72,8 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
         //Update Players collection's status
         var updatePlayerProtect = new Promise((resolve, reject) => {
             
+            
+
             //only protect the player with status.dead > 0 and killed by werewolves
             Player.findOne({'username': req.body.protectTarget}, {'status': 1, '_id': 0, 'killedByWerewolves': 1},  (err, result) => {
                 if(err) return reject(err)
@@ -140,8 +174,24 @@ module.exports = (io) => {
             console.log(err)
         })
     }
+    
+    const RequestToGetLastProtectedPlayer = (roomid, socket) => {
+        axios({
+            method: 'get',
+            url: 'http://localhost:3001/in-game/actions/' + roomid + '/savior-get-last-protected'
+        })
+        .then(res => {
+            socket.emit('LastProtectedPlayer', res.data)
+        })
+        .catch(err => {
+            console.log(err)
+        })
+    }
 
     saviorIO.on('connect', (socket) => {
+        socket.on('RequestToGetLastProtectedPlayer', roomid => {
+            RequestToGetLastProtectedPlayer(roomid, socket)
+        })
         socket.on('RequestToProtectPlayer', data => {
             RequestToProtectPlayer(data, socket)
         })
