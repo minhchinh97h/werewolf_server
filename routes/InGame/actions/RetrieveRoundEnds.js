@@ -72,12 +72,9 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
 
                                 sendingData.dead.forEach((d) => {
                                     if(receivePressedVotePlayers.hasOwnProperty(d)){
-                                        console.log(d)
                                         delete receivePressedVotePlayers[d]
                                     }
                                 })
-
-                                console.log(receivePressedVotePlayers)
 
                                 arr[i].receivePressedVotePlayers = receivePressedVotePlayers
                             }

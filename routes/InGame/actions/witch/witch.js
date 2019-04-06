@@ -114,8 +114,6 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => { 
-        
-
         //Update the Room's calling order
         var updateRoomProtect = new Promise((resolve, reject) => {
             Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
@@ -142,7 +140,7 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
                     if(canProtect){
                         callingOrder.every((order, index, callingOrder) => {
                             if(order.name === 'Witch protect target'){
-                                callingOrder.player = req.body.target_protect
+                                callingOrder[index].player = req.body.target_protect
                                 return false
                             }
                             return true
@@ -175,17 +173,27 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
             if(result === 'Used Heal Potion'){
                 //Only protect the player with dead > 0
                 //Update the player's status in 'Player' collection
-                Player.updateOne({'roomid': req.params.roomid, 'username': req.body.target_protect}, {
-                    $cond: { 
-                        if: {"status.dead": {$gt: 0}},  //only increment the status.dead value when its value is greater than 0 (meaning someone commited killing on the player)
-                        then: {$inc: {'status.dead': -1}},
-                        else: {$inc: {'status.dead': 0}}
-                    }
-                }, (err, result) => {
+                Player.findOne({'username': req.body.target_protect}, {'status': 0, '_id': 0}, (err, result) => {
                     if(err) return reject(err)
 
                     if(result !== null){
-                        res.send('ok')
+                        let status = result.status
+
+                        if(status["dead"] > 0){
+                            status["dead"] -= 1
+                        }
+
+                        Player.updateOne({'username': req.body.target_protect}, {$set: {'status': status}}, (err, result) => {
+                            if(err) return reje(err)
+
+                            if(result !== null){
+                                console.log(result)
+                                res.send('ok')
+                            }
+
+                            else
+                                res.send('No document found')
+                        })
                     }
 
                     else

@@ -47,15 +47,6 @@ router.post('/:roomid/request-hang-player', (req, res, next) => {
                                     receivePressedVotePlayers,
                                     allPlayersVoted = true
 
-                                
-                                // callingOrder.every((order, index, arr) => {
-                                //     if(order.name === "round end"){
-                                //         arr[index].receivePressedVotePlayers[req.body.player] = true
-                                //         return false
-                                //     }
-                                //     return true
-                                // })
-                                
                                 //Retrieve receivePressedVotePlayers to see whether all players have voted
                                 callingOrder.every((order, index, arr) => {
                                     if(order.name === "round end"){
@@ -71,17 +62,6 @@ router.post('/:roomid/request-hang-player', (req, res, next) => {
                                             allPlayersVoted = false
                                     }
                                 }
-                
-                
-                                // //Add chosen target into targets property of round end target
-                                // callingOrder.every((order, index, arr) => {
-                                //     if(order.name === 'round end target'){
-                                //         arr[index].targets.push(req.body.chosenPlayer)
-                                //         return false
-                                //     }
-                
-                                //     return true
-                                // })
                 
                                 //If all players have voted, then we proceed to pick a player from voted players to execute based on their votes
                                 if(allPlayersVoted){
@@ -142,34 +122,9 @@ router.post('/:roomid/request-hang-player', (req, res, next) => {
                                             res.send("all players voted")
                                         }
                                     })
-                                    // callingOrder.every((order, index, arr) => {
-                                    //     if(order.name === 'round end target'){
-                                    //         arr[index].chosenTarget = chosenTarget
-                                    //         return false
-                                    //     }
-                                    //     return true
-                                    // })
-                
-                                    
-                                    //Update callingOrder into Rooms collection
-                                    // Room.updateOne({"roomid": req.params.roomid}, {$set: {"callingOrder": callingOrder}}, (err, result) => {
-                                    //     if(err) return console.log(err)
-                
-                                    //     if(result !== null){
-                                    //         res.send("all players voted")
-                                    //     }
-                                    // })
                                 }
                 
                                 else{
-                                    //Update callingOrder into Rooms collection
-                                    // Room.updateOne({"roomid": req.params.roomid}, {$set: {"callingOrder": callingOrder}}, (err, result) => {
-                                    //     if(err) return console.log(err)
-                
-                                    //     if(result !== null){
-                                    //         res.send("not all players voted")
-                                    //     }
-                                    // })
                                     res.send("not all players voted")
                                 }
                             }
@@ -284,7 +239,6 @@ module.exports = (io) => {
             data: data
         })
         .then(res => {
-            console.log(res.data)
             //Make axios call to get the executed player and also make calculation to eliminate the player (and also related lover) from callingOrder
             if(res.data ===  "all players voted"){
                 axios({
