@@ -186,21 +186,23 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
                 })
 
                 if(isInLove){
-                    //Eliminate the hanged player and the related lover from callingOrder and update callingOrder
+                    //Eliminate the hanged player and the related lover from callingOrder, players and update callingOrder, players
                     lovers.forEach((player) => {
                         dead.push(player)
                         callingOrder = EliminateTheHangedPlayerFromCallingInTurn(player, callingOrder)
+                        players = EliminateTheHangedPlayerFromPlayers(chosenTarget, players)
                     })
                 }
 
                 else{
-                    //Eliminate the hanged player from callingOrder and update callingOrder
+                    //Eliminate the hanged player and the related lover from callingOrder, players and update callingOrder, players
                     dead.push(chosenTarget)
                     callingOrder = EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder)
+                    players = EliminateTheHangedPlayerFromPlayers(chosenTarget, players)
                 }
 
                 //Update the callingOrder to Rooms collection
-                Room.updateOne({"roomid": req.params.roomid}, {$set: {"callingOrder": callingOrder}}, (err, result) => {
+                Room.updateOne({"roomid": req.params.roomid}, {$set: {"callingOrder": callingOrder, "players": players}}, (err, result) => {
                     if(err) return console.log(err)
 
                     if(result !== null){
@@ -245,6 +247,16 @@ function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
     return callingOrder
 }
 
+
+function EliminateTheHangedPlayerFromPlayers(chosenPlayer, players){
+    players.every((player, index, arr) => {
+        if(player === chosenPlayer){
+            arr.splice(index, 1)
+            return false
+        }
+        return true
+    })
+}
 
 router.post('/:roomid/request-to-end-round', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })

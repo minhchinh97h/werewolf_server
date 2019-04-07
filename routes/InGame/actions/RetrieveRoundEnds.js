@@ -124,15 +124,17 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
 
                                 getThedeathsAndSilences
                                 .then((sendingData) => {
-                                    //find and update the deaths so that callingOrder only contains alive players in a local variable
+                                    //find and update the deaths so that callingOrder, players only contains alive players
                                     return new Promise((resolve, reject) => {
-                                        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+                                        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0, 'players': 1}, (err, result) => {
                                             if(err) return reject(err)
                                 
                                             if(result !== null){
                                                 let callingOrder = result.callingOrder,
+                                                    players = result.players
                                                     sendingData2
-                                
+                                                
+                                                //Eliminiate dead players from callingOrder field
                                                 callingOrder.forEach((order, i, arr) => {
                                                     if(order.player instanceof Array)
                                                         order.player.forEach((player, index, playerArr) => {
@@ -165,10 +167,20 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
                                                     }
                                                 })
 
-                                                //sending includes the deaths and silences from the first db call and the updated callingOrder from this db call
+                                                //Eliminate dead players from players field
+                                                sendingData.dead.forEach((deadPlayer) => {
+                                                    players.every((player, index, arr) => {
+                                                        if(player === deadPlayer){
+                                                            arr.splice(index, 1)
+                                                        }
+                                                    })
+                                                })
+
+                                                //sending includes the deaths and silences from the first db call and the updated callingOrder, players from this db call
                                                 sendingData2 = {
                                                     sendingData: sendingData,
-                                                    callingOrder: callingOrder
+                                                    callingOrder: callingOrder,
+                                                    players: players
                                                 }
                                                 resolve(sendingData2)
                                             }
@@ -179,9 +191,11 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
                                     })
                                 })
                                 .then((sendingData2) => {
-                                    //update the local variable callingOrder into Room collection
+                                    //update the callingOrder and players in Rooms collection
                                     return new Promise ((resolve, reject) => {
-                                        Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': sendingData2.callingOrder}}, (err, result) => {
+                                        Room.updateOne({'roomid': req.params.roomid}, 
+                                        {$set: {'callingOrder': sendingData2.callingOrder, 'players': sendingData2.players}}, 
+                                        (err, result) => {
                                             if(err) return reject(err)
 
                                             if(result !== null){
