@@ -22,11 +22,12 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
 
             if(result !== null){
                 let player1Role = '',
-                    player2Role = ''
+                    player2Role = '',
+                    callingOrder = result.callingOrder
 
-                result.callingOrder.forEach((order, index) => {
+                callingOrder.forEach((order, index) => {
                     if(order.name === 'The Lovers'){
-                        result.callingOrder[index].player = req.body.playersToConnect
+                        callingOrder[index].player = req.body.playersToConnect
                     }
                     
                     if(!order.special){
@@ -44,14 +45,18 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
 
                 //If a couple containing a human and a werewolf then form a new side
                 if((player1Role === "Werewolves" && player2Role !== "Werewolves") || (player1Role !== "Werewolves" && player2Role === "Werewolves")){
-                    result.callingOrder.every((order, index, arr) => {
+                    callingOrder.every((order, index, arr) => {
                         if(order.name === "Cupid"){
-                            arr[index].newSide = true
+                            arr[index]["newSide"] = true
+                            return false
                         }
+
+                        return true
                     })
                 }
 
-                Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': result.callingOrder}}, (err, result) => {
+
+                Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': callingOrder}}, (err, result) => {
                     if(err) return console.log(err)
 
                     if(result !== null){

@@ -41,6 +41,7 @@ class CallingOrderConstructor {
                 'when': 3,
                 'player': [],
                 'newSide': false,
+                'canUseAbility': true,
                 '1stNight': true
             },
             {

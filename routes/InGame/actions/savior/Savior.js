@@ -71,9 +71,6 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
 
         //Update Players collection's status
         var updatePlayerProtect = new Promise((resolve, reject) => {
-            
-            
-
             //only protect the player with status.dead > 0 and killed by werewolves
             Player.findOne({'username': req.body.protectTarget}, {'status': 1, '_id': 0, 'killedByWerewolves': 1},  (err, result) => {
                 if(err) return reject(err)
@@ -84,10 +81,11 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
 
                     if(status["dead"] > 0 && killedByWerewolves){
                         status["dead"] -= 1
+                        killedByWerewolves = false
                     }
 
                     //Proceed salvation for the chosen player
-                    Player.updateOne({'username': req.body.protectTarget}, {$set: {'status': status}}, (err, result) => {
+                    Player.updateOne({'username': req.body.protectTarget}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
                         if(err) return reject (err)
 
                         if(result !== null){

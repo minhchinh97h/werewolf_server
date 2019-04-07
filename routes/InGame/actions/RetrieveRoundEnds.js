@@ -50,7 +50,7 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
                 //of werewolves is half or more half of the total players
                 else{
                     callingOrder.every((order, index, arr) => {
-                        if(order.name === "Werewolves" && order.player instanceof Array && order.player.length >= (Math.floor(players.length/2))){
+                        if(order.name === "Werewolves" && order.player instanceof Array && order.player.length >= (Math.ceil(players.length/2))){
                             werewolvesWon = true
                             return false
                         }
@@ -63,9 +63,19 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
 
                     //check if piper side wins, only when all the players except the piper get charmed
                     else{
-                        callingOrder.every((order, index, arr) => {
-                            if(order.name === "The pied piper" && order.player instanceof Array && order.player.length === (players.length-1)){
-                                piperWon = true
+                        //to see if the pied piper is still alive
+                        callingOrder.every((order) => {
+                            if(order.name === "The pied piper"){
+                                if(order.player instanceof Array && order.player > 0){
+                                    //If he does then proceed checking
+                                    callingOrder.every((order, index, arr) => {
+                                        if(order.name === "The hypnotized" && order.player instanceof Array && order.player.length === (players.length-1)){
+                                            piperWon = true
+                                            return false
+                                        }
+                                        return true
+                                    })
+                                }
                                 return false
                             }
                             return true
@@ -79,7 +89,7 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
                         else{
                             if(players instanceof Array && players.length === 2){
                                 callingOrder.every((order, index, arr) => {
-                                    if(order.name === "Cupid" && order.player instanceof Array){
+                                    if(order.name === "Cupid" && order.player instanceof Array && order.newSide){
                                         if(players.includes(order.player[0]) && players.includes(order.player[1]))
                                             loversWon = true
     
@@ -131,7 +141,7 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
                                 
                                             if(result !== null){
                                                 let callingOrder = result.callingOrder,
-                                                    players = result.players
+                                                    players = result.players,
                                                     sendingData2
                                                 
                                                 //Eliminiate dead players from callingOrder field
@@ -172,7 +182,9 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
                                                     players.every((player, index, arr) => {
                                                         if(player === deadPlayer){
                                                             arr.splice(index, 1)
+                                                            return false
                                                         }
+                                                        return true
                                                     })
                                                 })
 

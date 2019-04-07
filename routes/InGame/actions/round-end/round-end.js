@@ -170,7 +170,9 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
                 }
                 //Meaning the voting round is ended without any attempts from players to vote, then we randomly pick one player from the player pool.
                 else{
+                    console.log(chosenTarget)
                     chosenTarget = players[Math.floor(Math.random() * (players.length -1))]
+                    console.log(chosenTarget)
                 }
 
                 //Check whether the hanged player is in love with anyone else
@@ -230,7 +232,7 @@ function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
                 delete receivePressedVotePlayers[chosenTarget]
             }
 
-            arr[i].receivePressedVotePlayers = receivePressedVotePlayers
+            arr[index].receivePressedVotePlayers = receivePressedVotePlayers
         }
 
         if(order.name === "end round action"){
@@ -240,7 +242,7 @@ function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
                 delete player[chosenTarget]
             }
 
-            arr[i].player = player
+            arr[index].player = player
         }
     })
 
@@ -249,6 +251,7 @@ function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
 
 
 function EliminateTheHangedPlayerFromPlayers(chosenPlayer, players){
+    
     players.every((player, index, arr) => {
         if(player === chosenPlayer){
             arr.splice(index, 1)
@@ -256,6 +259,8 @@ function EliminateTheHangedPlayerFromPlayers(chosenPlayer, players){
         }
         return true
     })
+
+    return players
 }
 
 router.post('/:roomid/request-to-end-round', (req, res, next) => {
@@ -286,12 +291,15 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                         callingOrder.every((order) => {
                             if(order.name === "end round action"){
                                 for(var key in order.player){
-                                    if(player.hasOwnProperty(key)){
-                                        if(!player[key])
+                                    if(order.player.hasOwnProperty(key)){
+                                        if(!order.player[key]){
                                             allPlayersPressedEndRoundButton = false
+                                            return false
+                                        }
                                     }
                                 }
                             }
+                            return true
                         })
 
                         //If all players have pressed, then check if the game is closed or not
@@ -318,7 +326,7 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                             //of werewolves is half or more half of the total players
                             else{
                                 callingOrder.every((order, index, arr) => {
-                                    if(order.name === "Werewolves" && order.player instanceof Array && order.player.length >= (Math.floor(players.length/2))){
+                                    if(order.name === "Werewolves" && order.player instanceof Array && order.player.length >= (Math.ceil(players.length/2))){
                                         werewolvesWon = true
                                         return false
                                     }
@@ -331,9 +339,19 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
 
                                 //check if piper side wins, only when all the players except the piper get charmed
                                 else{
-                                    callingOrder.every((order, index, arr) => {
-                                        if(order.name === "The pied piper" && order.player instanceof Array && order.player.length === (players.length-1)){
-                                            piperWon = true
+                                    //to see if the pied piper is still alive
+                                    callingOrder.every((order) => {
+                                        if(order.name === "The pied piper"){
+                                            if(order.player instanceof Array && order.player > 0){
+                                                //If he does then proceed checking
+                                                callingOrder.every((order, index, arr) => {
+                                                    if(order.name === "The hypnotized" && order.player instanceof Array && order.player.length === (players.length-1)){
+                                                        piperWon = true
+                                                        return false
+                                                    }
+                                                    return true
+                                                })
+                                            }
                                             return false
                                         }
                                         return true
@@ -347,7 +365,7 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                     else{
                                         if(players instanceof Array && players.length === 2){
                                             callingOrder.every((order, index, arr) => {
-                                                if(order.name === "Cupid" && order.player instanceof Array){
+                                                if(order.name === "Cupid" && order.player instanceof Array && order.newSide){
                                                     if(players.includes(order.player[0]) && players.includes(order.player[1]))
                                                         loversWon = true
                 
@@ -445,8 +463,9 @@ module.exports = (io) => {
             data: data
         })
         .then(res => {
+            console.log(res.data)
             if(res.data === "Start new round"){
-                igIO.in(data.roomid).emit('StateNewRound', res.data)
+                igIO.in(data.roomid).emit('StartNewRound', res.data)
             }
 
             else{
