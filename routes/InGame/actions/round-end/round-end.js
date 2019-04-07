@@ -213,12 +213,32 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
 })
 
 function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
-    callingOrder.forEach((order, index) => {
-        if(!order.special && order.player instanceof Array){
+    callingOrder.forEach((order, index, arr) => {
+        if(order.player instanceof Array){
             order.player.forEach((player, i, playerArr) => {
                 if(player === chosenTarget)
                     playerArr.splice(i, 1)
             })
+        }
+
+        if(order.name === "round end"){
+            let receivePressedVotePlayers = order.receivePressedVotePlayers
+
+            if(receivePressedVotePlayers.hasOwnProperty(chosenTarget)){
+                delete receivePressedVotePlayers[chosenTarget]
+            }
+
+            arr[i].receivePressedVotePlayers = receivePressedVotePlayers
+        }
+
+        if(order.name === "end round action"){
+            let player = order.player
+
+            if(player.hasOwnProperty(chosenTarget)){
+                delete player[chosenTarget]
+            }
+
+            arr[i].player = player
         }
     })
 

@@ -151,6 +151,18 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
 
                                                         arr[i].receivePressedVotePlayers = receivePressedVotePlayers
                                                     }
+
+                                                    if(order.name === "end round action"){
+                                                        let player = order.player
+
+                                                        sendingData.dead.forEach((d) => {
+                                                            if(player.hasOwnProperty(d)){
+                                                                delete player[d]
+                                                            }
+                                                        })
+
+                                                        arr[i].player = player
+                                                    }
                                                 })
 
                                                 //sending includes the deaths and silences from the first db call and the updated callingOrder from this db call
