@@ -170,9 +170,7 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
                 }
                 //Meaning the voting round is ended without any attempts from players to vote, then we randomly pick one player from the player pool.
                 else{
-                    console.log(chosenTarget)
                     chosenTarget = players[Math.floor(Math.random() * (players.length -1))]
-                    console.log(chosenTarget)
                 }
 
                 //Check whether the hanged player is in love with anyone else
@@ -283,6 +281,7 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                     if (err) return console.log(err)
 
                     if(result !== null){
+                        console.log("3")
                         let callingOrder = result.callingOrder,
                             players = result.players,
                             allPlayersPressedEndRoundButton = true
@@ -398,7 +397,15 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                                 }
 
                                                 else if(order.name === "end round action"){
-                                                    arr[index].player.length = 0
+                                                    let player = order.player
+
+                                                    for(var key in player){
+                                                        if(player.hasOwnProperty(key)){
+                                                            player[key] = false
+                                                        }
+                                                    }
+
+                                                    arr[index].player = player
                                                 }
 
                                                 else if(order.name === "Werewolves current target"){
@@ -463,7 +470,6 @@ module.exports = (io) => {
             data: data
         })
         .then(res => {
-            console.log(res.data)
             if(res.data === "Start new round"){
                 igIO.in(data.roomid).emit('StartNewRound', res.data)
             }
