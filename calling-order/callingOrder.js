@@ -15,6 +15,11 @@ class CallingOrderConstructor {
                 'chosenTarget': ''
             },
             {
+                'name': 'end round action', //To gather info about players who clicked on end round button to be able to proceed next round
+                'special': true,
+                'player': {}
+            },
+            {
                 'name': 'current called role',
                 'role': "",
                 'special': true
@@ -35,6 +40,7 @@ class CallingOrderConstructor {
                 'name': 'Cupid',
                 'when': 3,
                 'player': [],
+                'newSide': false,
                 '1stNight': true
             },
             {

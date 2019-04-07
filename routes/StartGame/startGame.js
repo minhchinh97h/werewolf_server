@@ -214,18 +214,20 @@ router.get('/:roomid', (req, res, next) => {
                     return true
                 })
 
-                //Update round end item
+                //Update round end's receivePressedVotePlayers and end round action's player
                 result.players.forEach((player) => {
                     newCallingOrder.every((order, index, arr) => {
                         if(order.name === "round end"){
                             arr[index].receivePressedVotePlayers[player] = false
                             return false
                         }
-
+                        else if(order.name === "end round action"){
+                            arr[index].player[player] = false
+                            return false
+                        }
                         return true
                     })
                 })
-
                 //Update newCallingOrder with werewolves end turn's receiveEndTurnObject 
                 let receiveEndTurnObject = {}
                 newCallingOrder.every((order) => {

@@ -6,6 +6,7 @@ var roomSchema = new mongoose.Schema({
     timeCreated: Number,
     numberOfPlayers: Number,
     players: [String],
+    currentPlayers: [String],
     status: {
         type: String,
         enum: ['open', 'full', 'ongoing']
@@ -60,6 +61,15 @@ var roomSchema = new mongoose.Schema({
         'The wild child': Number,
         'The dog wolf': Number,
         'totalCards': Number
+    },
+    HumanSide: {
+        player: [String]
+    },
+    WerewolvesSide: {
+        player: [String]
+    },
+    LoverSide: {
+        player: [String]
     },
     callingOrder: [Object],
     playerCurrentStatus: [Object]

@@ -40,6 +40,7 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
                                                                             'timeCreated': req.body.timeCreated,
                                                                             'numberOfPlayers': req.body.numberOfPlayers,
                                                                             'players': [req.body.players],
+                                                                            'currentPlayers': [req.body.players],
                                                                             'status': req.body.status,
                                                                             'currentRoles': req.body.currentRoles,
                                                                             'recommendedRoles': req.body.recommendedRoles

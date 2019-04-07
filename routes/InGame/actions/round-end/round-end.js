@@ -225,6 +225,18 @@ function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
     return callingOrder
 }
 
+router.post('/:roomid/request-to-end-round', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => { 
+        
+    })
+})
+
 module.exports = (io) => {
 
     let reIO = io.of('/round-end')
@@ -254,16 +266,14 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
-    const requestToGetHangPlayer = (roomid, socket) => {
+    const RequestToEndRound = (data) => {
         axios({
-            method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + roomid + '/request-to-get-hang-player',
+            method: 'post',
+            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-to-end-round',
+            data: data
         })
         .then(res => {
-            console.log(res.data)
-            //Returning an array of dead players
-            // reIO.in(data.roomid).emit("BroadcastREDeadPlayers", res.data)
-            socket.emit("BroadcastREDeadPlayers", res.data)
+
         })
         .catch(err => console.log(err))
     }
@@ -281,6 +291,9 @@ module.exports = (io) => {
             requestToHangPlayer(data)
         })
 
+        socket.on('RequestToEndRound', data => {
+            RequestToEndRound(data)
+        })
         // socket.on('RequestToGetHangPlayer', roomid => {
         //     requestToGetHangPlayer(roomid, socket)
         // })

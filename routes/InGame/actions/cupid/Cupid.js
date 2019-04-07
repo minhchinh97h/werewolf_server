@@ -42,6 +42,15 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
                     }
                 })
 
+                //If a couple containing a human and a werewolf then form a new side
+                if((player1Role === "Werewolves" && player2Role !== "Werewolves") || (player1Role !== "Werewolves" && player2Role === "Werewolves")){
+                    result.callingOrder.every((order, index, arr) => {
+                        if(order.name === "Cupid"){
+                            arr[index].newSide = true
+                        }
+                    })
+                }
+
                 Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': result.callingOrder}}, (err, result) => {
                     if(err) return console.log(err)
 

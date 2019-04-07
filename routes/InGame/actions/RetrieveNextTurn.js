@@ -82,56 +82,54 @@ router.post('/:roomid/retrieve-next-turn-for-werewolves', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => { 
-        Room.findOne({"roomid": req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+        //Update the werewolves end turn field, change its player property to true
+        Room.findOneAndUpdate({'roomid': req.params.roomid}, 
+                                {$set: {[`callingOrder.$[element].receiveEndTurnObject.${req.body.player}`]: true}},
+                                {arrayFilters: [{"element.name": "Werewolves end turn"}]},
+                                (err, result) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                let callingOrder = result.callingOrder,
-                    werewolvesEndTurnObj
-                
-
-
-                //Update the werewolves end turn field, change its player property to true
-                callingOrder.every((order, index, arr) => {
-                    if(order.name === "Werewolves end turn"){
-                        arr[index].receiveEndTurnObject[req.body.player] = true
-                        return false
-                    }
-
-                    return true
-                })
-
-                //Get the werewolves end turn field's receiveEndTurnObject obj to check if all werewolves pressed end turn button
-                callingOrder.every((order, index, arr) => {
-                    if(order.name === "Werewolves end turn"){
-                        werewolvesEndTurnObj = order.receiveEndTurnObject
-                        return false
-                    }
-
-                    return true
-                })
-
-                let allWerewolvesPressed = true
-
-                for(var player in werewolvesEndTurnObj){
-                    if(werewolvesEndTurnObj.hasOwnProperty(player)){
-                        if(!werewolvesEndTurnObj[player])
-                            allWerewolvesPressed = false
-                    }
-                }
-
-                //Update the new callingOrder with new werewolves end turn 
-                Room.updateOne({"roomid": req.params.roomid}, {$set: {"callingOrder": callingOrder}}, (err, result) => {
+                Room.findOne({"roomid": req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
                     if(err) return console.log(err)
-
+        
                     if(result !== null){
-                        if(allWerewolvesPressed){
-                            res.send('all werewolves pressed')
+                        let callingOrder = result.callingOrder,
+                            werewolvesEndTurnObj
+                        
+                        //Get the werewolves end turn field's receiveEndTurnObject obj to check if all werewolves pressed end turn button
+                        callingOrder.every((order, index, arr) => {
+                            if(order.name === "Werewolves end turn"){
+                                werewolvesEndTurnObj = order.receiveEndTurnObject
+                                return false
+                            }
+        
+                            return true
+                        })
+        
+                        let allWerewolvesPressed = true
+        
+                        for(var player in werewolvesEndTurnObj){
+                            if(werewolvesEndTurnObj.hasOwnProperty(player)){
+                                if(!werewolvesEndTurnObj[player])
+                                    allWerewolvesPressed = false
+                            }
                         }
         
-                        else{
-                            res.send('not all werewolves pressed')
-                        }
+                        //Update the new callingOrder with new werewolves end turn 
+                        Room.updateOne({"roomid": req.params.roomid}, {$set: {"callingOrder": callingOrder}}, (err, result) => {
+                            if(err) return console.log(err)
+        
+                            if(result !== null){
+                                if(allWerewolvesPressed){
+                                    res.send('all werewolves pressed')
+                                }
+                
+                                else{
+                                    res.send('not all werewolves pressed')
+                                }
+                            }
+                        })
                     }
                 })
             }
@@ -249,7 +247,8 @@ module.exports = (io) => {
 
     let rntIO = io.of('/retrieve-next-turn'),
         wwIO = io.of('/werewolves'),
-        rreIO = io.of('/retrieve-round-ends')
+        rreIO = io.of('/retrieve-round-ends'),
+        ieIO = io.of('/in-game')
 
     const getNextTurn = (data) => {
         axios({
@@ -270,8 +269,26 @@ module.exports = (io) => {
                     url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-round-ends'
                 })
                 .then(res => {
-                    //res.data of GET request is from RetrieveRoundEnds.js and also the joinning room action of reIO
-                    rreIO.in(data.roomid).emit('RoundEnds', res.data)
+                    if(res.data === "Human won"){
+                        ieIO.in(data.roomid).emit('GameEnds', res.data)
+                    }
+
+                    else if (res.data === "Werewolves won"){
+                        ieIO.in(data.roomid).emit('GameEnds', res.data)
+                    }
+
+                    else if (res.data === "Piper won"){
+                        ieIO.in(data.roomid).emit('GameEnds', res.data)
+                    }
+
+                    else if (res.data === "Lovers won"){
+                        ieIO.in(data.roomid).emit('GameEnds', res.data)
+                    }
+
+                    else{
+                        //res.data of GET request is from RetrieveRoundEnds.js and also the joinning room action of reIO
+                        rreIO.in(data.roomid).emit('RoundEnds', res.data)
+                    }
                 })
         })
         .catch(err => console.log(err))

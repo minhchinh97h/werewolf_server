@@ -21,101 +21,179 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => {
+        //Check if the game is closed by any side has won the game (Human, Werewolves, Piper, Lover if there is a couple of human and werewolf)
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, 'players': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
 
-        //Announce the deaths and silences
-        let getThedeathsAndSilences = new Promise((resolve, reject) => {
-            Player.find({'roomid': req.params.roomid}, (err, result) => {
-                if(err) return reject(err)
-    
-                if(result !== null){
-    
-                    var sendingData = {
-                        dead: [],
-                        silence: ''
+            if(result !== null){
+                let callingOrder = result.callingOrder,
+                    players = result.players,
+                    humanWon = false,
+                    werewolvesWon = false,
+                    loversWon = false,
+                    piperWon = false
+                
+                //check if the human side wins, only when all werewolves are eliminated
+                callingOrder.every((order, index , arr) => {
+                    if(order.name === "Werewolves" && order.player instanceof Array && order.player.length === 0){
+                        humanWon = true
+                        return false
                     }
-    
-                    result.forEach((data, i) => {
-                        if(data.status.dead > 0)
-                            sendingData.dead.push(data.username)
-                        else
-                            if(data.status.silence > 0)
-                                sendingData.silence = data.username
-                    })
-                    resolve(sendingData)
+                    return true
+                })
+
+                if(humanWon){
+                    res.send('Human won')
                 }
+                
+                //check if werewolves side wins, only when the number of human equals to the number of werewolves, other meaning is when the number
+                //of werewolves is half or more half of the total players
+                else{
+                    callingOrder.every((order, index, arr) => {
+                        if(order.name === "Werewolves" && order.player instanceof Array && order.player.length >= (Math.floor(players.length/2))){
+                            werewolvesWon = true
+                            return false
+                        }
+                        return true
+                    })
 
-                else
-                    reject("no such document")
-            })
-        })
+                    if(werewolvesWon){
+                        res.send('Werewolves won')
+                    }
 
-        getThedeathsAndSilences
-        .then((sendingData) => {
-            //find and update the deaths so that callingOrder only contains alive players in a local variable
-            return new Promise((resolve, reject) => {
-                Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
-                    if(err) return reject(err)
-        
-                    if(result !== null){
-                        let callingOrder = result.callingOrder,
-                            sendingData2
-        
-                        callingOrder.forEach((order, i, arr) => {
-                            if(order.player instanceof Array)
-                                order.player.forEach((player, index, playerArr) => {
-                                    if(sendingData.dead.includes(player) && sendingData.dead instanceof Array)
-                                        playerArr.splice(index, 1)
-                                })
-                            
-                            if(order.name === "round end"){
-                                let receivePressedVotePlayers = order.receivePressedVotePlayers
-
-                                sendingData.dead.forEach((d) => {
-                                    if(receivePressedVotePlayers.hasOwnProperty(d)){
-                                        delete receivePressedVotePlayers[d]
-                                    }
-                                })
-
-                                arr[i].receivePressedVotePlayers = receivePressedVotePlayers
+                    //check if piper side wins, only when all the players except the piper get charmed
+                    else{
+                        callingOrder.every((order, index, arr) => {
+                            if(order.name === "The pied piper" && order.player instanceof Array && order.player.length === (players.length-1)){
+                                piperWon = true
+                                return false
                             }
+                            return true
                         })
 
-                        //sending includes the deaths and silences from the first db call and the updated callingOrder from this db call
-                        sendingData2 = {
-                            sendingData: sendingData,
-                            callingOrder: callingOrder
+                        if(piperWon){
+                            res.send('Piper won')
                         }
-                        resolve(sendingData2)
+    
+                        //check if lover side wins, only when all the players excepts the lovers are eliminated
+                        else{
+                            if(players instanceof Array && players.length === 2){
+                                callingOrder.every((order, index, arr) => {
+                                    if(order.name === "Cupid" && order.player instanceof Array){
+                                        if(players.includes(order.player[0]) && players.includes(order.player[1]))
+                                            loversWon = true
+    
+                                        return false
+                                    }
+                                    return true
+                                })
+                            }
+    
+                            if(loversWon){
+                                res.send('Lovers won')
+                            }
+
+                            //If not any side has won the game yet, then proceed the round end
+                            else{
+                                //Announce the deaths and silences
+                                let getThedeathsAndSilences = new Promise((resolve, reject) => {
+                                    Player.find({'roomid': req.params.roomid}, (err, result) => {
+                                        if(err) return reject(err)
+                            
+                                        if(result !== null){
+                            
+                                            var sendingData = {
+                                                dead: [],
+                                                silence: ''
+                                            }
+                            
+                                            result.forEach((data, i) => {
+                                                if(data.status.dead > 0)
+                                                    sendingData.dead.push(data.username)
+                                                else
+                                                    if(data.status.silence > 0)
+                                                        sendingData.silence = data.username
+                                            })
+                                            resolve(sendingData)
+                                        }
+
+                                        else
+                                            reject("no such document")
+                                    })
+                                })
+
+                                getThedeathsAndSilences
+                                .then((sendingData) => {
+                                    //find and update the deaths so that callingOrder only contains alive players in a local variable
+                                    return new Promise((resolve, reject) => {
+                                        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+                                            if(err) return reject(err)
+                                
+                                            if(result !== null){
+                                                let callingOrder = result.callingOrder,
+                                                    sendingData2
+                                
+                                                callingOrder.forEach((order, i, arr) => {
+                                                    if(order.player instanceof Array)
+                                                        order.player.forEach((player, index, playerArr) => {
+                                                            if(sendingData.dead.includes(player) && sendingData.dead instanceof Array)
+                                                                playerArr.splice(index, 1)
+                                                        })
+                                                    
+                                                    if(order.name === "round end"){
+                                                        let receivePressedVotePlayers = order.receivePressedVotePlayers
+
+                                                        sendingData.dead.forEach((d) => {
+                                                            if(receivePressedVotePlayers.hasOwnProperty(d)){
+                                                                delete receivePressedVotePlayers[d]
+                                                            }
+                                                        })
+
+                                                        arr[i].receivePressedVotePlayers = receivePressedVotePlayers
+                                                    }
+                                                })
+
+                                                //sending includes the deaths and silences from the first db call and the updated callingOrder from this db call
+                                                sendingData2 = {
+                                                    sendingData: sendingData,
+                                                    callingOrder: callingOrder
+                                                }
+                                                resolve(sendingData2)
+                                            }
+
+                                            else
+                                                reject("no such document")
+                                        })
+                                    })
+                                })
+                                .then((sendingData2) => {
+                                    //update the local variable callingOrder into Room collection
+                                    return new Promise ((resolve, reject) => {
+                                        Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': sendingData2.callingOrder}}, (err, result) => {
+                                            if(err) return reject(err)
+
+                                            if(result !== null){
+                                                resolve(sendingData2.sendingData)
+                                            }
+
+                                            else
+                                                reject("no such document")
+                                        })
+                                    })
+                                })
+                                .then((response) => {
+                                    res.send(response)
+                                })
+                                .catch((err) => {
+                                    //err from rejection
+                                    console.log(err)
+                                })
+                            }
+                        }
                     }
-
-                    else
-                        reject("no such document")
-                })
-            })
+                }
+            }
         })
-        .then((sendingData2) => {
-            //update the local variable callingOrder into Room collection
-            return new Promise ((resolve, reject) => {
-                Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': sendingData2.callingOrder}}, (err, result) => {
-                    if(err) return reject(err)
-
-                    if(result !== null){
-                        resolve(sendingData2.sendingData)
-                    }
-
-                    else
-                        reject("no such document")
-                })
-            })
-        })
-        .then((response) => {
-            res.send(response)
-        })
-        .catch((err) => {
-            //err from rejection
-            console.log(err)
-        })
-        
     })
 })
 
