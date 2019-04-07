@@ -35,15 +35,15 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
             else{
                 //update or create a row if it doesnt exist
                 Room.updateOne({admin: req.body.admin}, { $set: {
-                                                                            'roomid': req.body.roomid, 
-                                                                            'admin': req.body.admin, 
-                                                                            'timeCreated': req.body.timeCreated,
-                                                                            'numberOfPlayers': req.body.numberOfPlayers,
-                                                                            'players': [req.body.players],
-                                                                            'currentPlayers': [req.body.players],
-                                                                            'status': req.body.status,
-                                                                            'currentRoles': req.body.currentRoles,
-                                                                            'recommendedRoles': req.body.recommendedRoles
+                                                                'roomid': req.body.roomid, 
+                                                                'admin': req.body.admin, 
+                                                                'timeCreated': req.body.timeCreated,
+                                                                'numberOfPlayers': req.body.numberOfPlayers,
+                                                                'players': [req.body.players],
+                                                                'currentPlayers': [req.body.players],
+                                                                'status': req.body.status,
+                                                                'currentRoles': req.body.currentRoles,
+                                                                'recommendedRoles': req.body.recommendedRoles
 
                 }}, {upsert: true}, (err, result) => {
                     if(err) console.log(err)

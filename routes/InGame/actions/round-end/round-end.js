@@ -225,6 +225,7 @@ function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
     return callingOrder
 }
 
+
 router.post('/:roomid/request-to-end-round', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -233,13 +234,152 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => { 
-        
+        //Update the player in end round action's player obj to true indicating that the player has pressed the end round button
+        Room.findOneAndUpdate({'roomid': req.params.roomid},
+                                {$set: {[`callingOrder.$[element].player.${req.body.player}`]: true}},
+                                {arrayFilters: [{'element.name': 'end round action'}]},
+                                (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0, 'players': 1}, (err, result) => {
+                    if (err) return console.log(err)
+
+                    if(result !== null){
+                        let callingOrder = result.callingOrder,
+                            players = result.players,
+                            allPlayersPressedEndRoundButton = true
+
+                        //To check whether all the players have pressed the end round button in order to proceed next round 
+                        callingOrder.every((order) => {
+                            if(order.name === "end round action"){
+                                for(var key in order.player){
+                                    if(player.hasOwnProperty(key)){
+                                        if(!player[key])
+                                            allPlayersPressedEndRoundButton = false
+                                    }
+                                }
+                            }
+                        })
+
+                        //If all players have pressed, then check if the game is closed or not
+                        if(allPlayersPressedEndRoundButton){
+                            let humanWon = false,
+                                werewolvesWon = false,
+                                loversWon = false,
+                                piperWon = false
+
+                            //check if the human side wins, only when all werewolves are eliminated
+                            callingOrder.every((order, index , arr) => {
+                                if(order.name === "Werewolves" && order.player instanceof Array && order.player.length === 0){
+                                    humanWon = true
+                                    return false
+                                }
+                                return true
+                            })
+
+                            if(humanWon){
+                                res.send('Human won')
+                            }
+
+                            //check if werewolves side wins, only when the number of human equals to the number of werewolves, other meaning is when the number
+                            //of werewolves is half or more half of the total players
+                            else{
+                                callingOrder.every((order, index, arr) => {
+                                    if(order.name === "Werewolves" && order.player instanceof Array && order.player.length >= (Math.floor(players.length/2))){
+                                        werewolvesWon = true
+                                        return false
+                                    }
+                                    return true
+                                })
+
+                                if(werewolvesWon){
+                                    res.send('Werewolves won')
+                                }
+
+                                //check if piper side wins, only when all the players except the piper get charmed
+                                else{
+                                    callingOrder.every((order, index, arr) => {
+                                        if(order.name === "The pied piper" && order.player instanceof Array && order.player.length === (players.length-1)){
+                                            piperWon = true
+                                            return false
+                                        }
+                                        return true
+                                    })
+
+                                    if(piperWon){
+                                        res.send('Piper won')
+                                    }
+
+                                    //check if lover side wins, only when all the players excepts the lovers are eliminated
+                                    else{
+                                        if(players instanceof Array && players.length === 2){
+                                            callingOrder.every((order, index, arr) => {
+                                                if(order.name === "Cupid" && order.player instanceof Array){
+                                                    if(players.includes(order.player[0]) && players.includes(order.player[1]))
+                                                        loversWon = true
+                
+                                                    return false
+                                                }
+                                                return true
+                                            })
+                                        }
+                
+                                        if(loversWon){
+                                            res.send('Lovers won')
+                                        }
+
+                                        //If not any side has won the game yet, reset round end's, round end target's, end round action's, Werewolves current target's
+                                        else{
+                                            callingOrder.forEach((order, index, arr) => {
+                                                if(order.name === "round end"){
+                                                    let receivePressedVotePlayers = order.receivePressedVotePlayers
+                                                    for(var key in receivePressedVotePlayers){
+                                                        if(receivePressedVotePlayers.hasOwnProperty(key)){
+                                                            receivePressedVotePlayers[key] = false
+                                                        }
+                                                    }
+                                                    arr[index].receivePressedVotePlayers = receivePressedVotePlayers
+                                                }
+
+                                                else if(order.name === "round end target"){
+                                                    arr[index].targets.length = 0
+                                                    arr[index].chosenTarget = ''
+                                                }
+
+                                                else if(order.name === "end round action"){
+                                                    arr[index].player.length = 0
+                                                }
+
+                                                else if(order.name === "Werewolves current target"){
+                                                    arr[index].player.length = 0
+                                                    arr[index].chosen = ''
+                                                }
+                                            })
+
+                                            Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': callingOrder}}, (err, result) => {
+                                                if(err) return console.log(err)
+
+                                                if(result !== null){
+                                                    res.send('Start new round')
+                                                }
+                                            })
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        })
     })
 })
 
 module.exports = (io) => {
 
-    let reIO = io.of('/round-end')
+    let reIO = io.of('/round-end'),
+        igIO = io.of('/in-game')
 
     reIO.setMaxListeners(Infinity)
 
@@ -273,7 +413,13 @@ module.exports = (io) => {
             data: data
         })
         .then(res => {
+            if(res.data === "Start new round"){
+                igIO.in(data.roomid).emit('StateNewRound', res.data)
+            }
 
+            else{
+                igIO.in(data.roomid).emit('GameEnds', res.data)
+            }
         })
         .catch(err => console.log(err))
     }

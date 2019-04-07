@@ -248,7 +248,7 @@ module.exports = (io) => {
     let rntIO = io.of('/retrieve-next-turn'),
         wwIO = io.of('/werewolves'),
         rreIO = io.of('/retrieve-round-ends'),
-        ieIO = io.of('/in-game')
+        igIO = io.of('/in-game')
 
     const getNextTurn = (data) => {
         axios({
@@ -270,19 +270,19 @@ module.exports = (io) => {
                 })
                 .then(res => {
                     if(res.data === "Human won"){
-                        ieIO.in(data.roomid).emit('GameEnds', res.data)
+                        igIO.in(data.roomid).emit('GameEnds', res.data)
                     }
 
                     else if (res.data === "Werewolves won"){
-                        ieIO.in(data.roomid).emit('GameEnds', res.data)
+                        igIO.in(data.roomid).emit('GameEnds', res.data)
                     }
 
                     else if (res.data === "Piper won"){
-                        ieIO.in(data.roomid).emit('GameEnds', res.data)
+                        igIO.in(data.roomid).emit('GameEnds', res.data)
                     }
 
                     else if (res.data === "Lovers won"){
-                        ieIO.in(data.roomid).emit('GameEnds', res.data)
+                        igIO.in(data.roomid).emit('GameEnds', res.data)
                     }
 
                     else{
