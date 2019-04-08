@@ -89,7 +89,7 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
                         else{
                             if(players instanceof Array && players.length === 2){
                                 callingOrder.every((order, index, arr) => {
-                                    if(order.name === "Cupid" && order.player instanceof Array && order.newSide){
+                                    if(order.name === "The Lovers" && order.player instanceof Array && order.newSide){
                                         if(players.includes(order.player[0]) && players.includes(order.player[1]))
                                             loversWon = true
     

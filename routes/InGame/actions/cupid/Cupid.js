@@ -46,15 +46,22 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
                 //If a couple containing a human and a werewolf then form a new side
                 if((player1Role === "Werewolves" && player2Role !== "Werewolves") || (player1Role !== "Werewolves" && player2Role === "Werewolves")){
                     callingOrder.every((order, index, arr) => {
-                        if(order.name === "Cupid"){
+                        if(order.name === "The Lovers"){
                             arr[index]["newSide"] = true
                             return false
                         }
-
                         return true
                     })
                 }
 
+                //Change canUseAbility to false so Cupid cannot connect anymore
+                callingOrder.every((order, index, arr) => {
+                    if(order.name === "Cupid"){
+                        arr[index].canUseAbility = false
+                        return false
+                    }
+                    return true
+                })
 
                 Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': callingOrder}}, (err, result) => {
                     if(err) return console.log(err)
@@ -79,13 +86,39 @@ router.post('/:roomid/cupid-connect', (req, res, next) => {
     })
 })
 
+router.get('/:roomid/cupid-can-use-ability', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => { 
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                let callingOrder = result.callingOrder
+
+                callingOrder.every((order) => {
+                    if(order.name === "Cupid"){
+                        res.send(order.canUseAbility)
+                        return false
+                    }
+                    return true
+                })
+            }
+        })
+    })
+})
+
 module.exports = (io) => {
     let cupidIO = io.of('/cupid')
 
     let inGameIO = io.of('/in-game')
 
-    const requestConnect = async (data, socket) => {
-        await axios({
+    const requestConnect = (data, socket) => {
+        axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/cupid-connect',
             data: {
@@ -100,10 +133,24 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
+    const RequestToGetCupidAbility = (roomid, socket) => {
+        axios({
+            method: 'get',
+            url: 'http://localhost:3001/in-game/actions/' + roomid + '/cupid-can-use-ability'
+        })
+        .then(res => {
+            socket.emit('CanUseAbility', res.data)
+        })
+        .catch(err => console.log(err))
+    }
 
     cupidIO.on('connect', (socket) => {
         socket.on('RequestToConnectPlayers', data => {
             requestConnect(data, socket)
+        })
+
+        socket.on('RequestToGetCupidAbility', roomid => {
+            RequestToGetCupidAbility(roomid, socket)
         })
     })
     return router

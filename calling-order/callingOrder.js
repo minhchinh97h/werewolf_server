@@ -40,13 +40,13 @@ class CallingOrderConstructor {
                 'name': 'Cupid',
                 'when': 3,
                 'player': [],
-                'newSide': false,
                 'canUseAbility': true,
                 '1stNight': true
             },
             {
                 'name': 'The Lovers',
                 'special': true,
+                'newSide': false,
                 'player': [],
                 '1stNight': true
             },
