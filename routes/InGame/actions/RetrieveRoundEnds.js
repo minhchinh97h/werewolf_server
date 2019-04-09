@@ -221,7 +221,7 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
 
                                 //If not any side has won the game yet, then proceed the round end (morning stage)
                                 else{
-                                    res.send("Start morning")
+                                    res.send(response)
                                 }
                             }
                         }
