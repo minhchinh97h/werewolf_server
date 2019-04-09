@@ -74,7 +74,7 @@ router.post('/:roomid/request-hang-player', (req, res, next) => {
                                             targets = order.targets
                 
                                             order.targets.forEach((target, index) => {
-                                                if(targets_obj[target])
+                                                if(targets_obj.hasOwnProperty(target))
                                                     targets_obj[target] += 1
                                                 else
                                                 targets_obj[target] = 0
@@ -104,7 +104,7 @@ router.post('/:roomid/request-hang-player', (req, res, next) => {
                                             }
                                         }
                                     }
-                
+
                                     //pick randomly from targets array which holds all the chosen players
                                     if(allVotesEqual){
                                         chosenTarget = targets[Math.floor(Math.random() * (targets.length -1))]
@@ -152,7 +152,7 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
                     chosenTarget, //chosenTarget from round end target of callingOrder
                     lovers = [],  //array holding players in case chosenTarget is in love with someone else
                     isInLove = false, //to determine whether the chosenTarget is in love
-                    dead = [] //An array contains all the dead players,
+                    dead = [], //An array contains all the dead players,
                     players = result.players //An array contains all current players
                 
                 //Get chosenTarget
@@ -177,7 +177,10 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
                 callingOrder.every((order, index) => {
                     if(order.name === "The Lovers"){
                         if(order.player instanceof Array && order.player.includes(chosenTarget)){
-                            lovers = order.player
+
+                            // lovers = order.player // ----> WARNING: CANNOT USE THIS EXPRESSION BECAUSE WHEN ORDER.PLAYER GETS CHANGED, LOVERS WILL GET CHANGED
+
+                            lovers = order.player.map(p => {return p}) // ----> TO INITIALIZE A NEW ARRAY FROM EXISTING ARRAY, USE MAP
                             isInLove = true
                         }
                         return false
@@ -187,11 +190,14 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
 
                 if(isInLove){
                     //Eliminate the hanged player and the related lover from callingOrder, players and update callingOrder, players
-                    lovers.forEach((player) => {
-                        dead.push(player)
-                        callingOrder = EliminateTheHangedPlayerFromCallingInTurn(player, callingOrder)
-                        players = EliminateTheHangedPlayerFromPlayers(chosenTarget, players)
-                    })
+                    dead = lovers
+
+                    callingOrder = EliminateTheHangedPlayerFromCallingInTurn(lovers[0], callingOrder)
+                    players = EliminateTheHangedPlayerFromPlayers(lovers[0], players, lovers)
+
+                    callingOrder = EliminateTheHangedPlayerFromCallingInTurn(lovers[1], callingOrder)
+                    players = EliminateTheHangedPlayerFromPlayers(lovers[1], players)
+
                 }
 
                 else{
@@ -217,9 +223,12 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
 function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
     callingOrder.forEach((order, index, arr) => {
         if(order.player instanceof Array){
-            order.player.forEach((player, i, playerArr) => {
-                if(player === chosenTarget)
+            order.player.every((player, i, playerArr) => {
+                if(player === chosenTarget){
                     playerArr.splice(i, 1)
+                    return false
+                }
+                return true
             })
         }
 
@@ -231,6 +240,7 @@ function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
             }
 
             arr[index].receivePressedVotePlayers = receivePressedVotePlayers
+
         }
 
         if(order.name === "end round action"){
@@ -249,7 +259,6 @@ function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
 
 
 function EliminateTheHangedPlayerFromPlayers(chosenPlayer, players){
-    
     players.every((player, index, arr) => {
         if(player === chosenPlayer){
             arr.splice(index, 1)
