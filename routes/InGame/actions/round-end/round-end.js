@@ -271,6 +271,7 @@ function EliminateTheHangedPlayerFromPlayers(chosenPlayer, players){
 }
 
 router.post('/:roomid/request-to-end-round', (req, res, next) => {
+
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
     var db = mongoose.connection
@@ -290,7 +291,6 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                     if (err) return console.log(err)
 
                     if(result !== null){
-                        console.log("3")
                         let callingOrder = result.callingOrder,
                             players = result.players,
                             allPlayersPressedEndRoundButton = true
@@ -435,6 +435,10 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                 }
                             }
                         }
+
+                        else{
+                            res.send('Not all players end round')
+                        }
                     }
                 })
             }
@@ -450,8 +454,8 @@ module.exports = (io) => {
     reIO.setMaxListeners(Infinity)
 
     //inside requestToHangPlayer, we calculate the chosenTarget which is the final hanged player and update to the database
-    const requestToHangPlayer = async (data) => {
-        await axios({
+    const requestToHangPlayer = (data) => {
+        axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-hang-player',
             data: data
@@ -472,8 +476,8 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
-    const RequestToEndRound = async (data) => {
-        await axios({
+    const RequestToEndRound = (data) => {
+        axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-to-end-round',
             data: data
@@ -483,7 +487,7 @@ module.exports = (io) => {
                 igIO.in(data.roomid).emit('StartNewRound', res.data)
             }
 
-            else{
+            else if(res.data !== "Start new round" && res.data !== "Not all players end round"){
                 igIO.in(data.roomid).emit('GameEnds', res.data)
             }
         })
