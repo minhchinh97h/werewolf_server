@@ -83,24 +83,67 @@ router.post('/:roomid/witch-kill', (req, res, next) => {
         
         updateRoomKill.then(result => {
             if(result === "Used Kill Potion"){
-                //Update the player's status in 'Player' collection
-                    Player.updateOne({'roomid': req.params.roomid, 'username': req.body.target_kill}, {
-                        $inc: {'status.dead': 1}
-                    }, (err, result) => {
-                        if(err) return reject(err)
+                //Check if the player is in love with someone else
+                Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+                    if(err) console.log(err)
 
-                        if(result !== null){
-                            res.send('ok')
+                    if(result !== null){
+                        let callingOrder = result.callingOrder,
+                            lovers = []
+                        
+                        callingOrder.every((order, index) => {
+                            if(order.name === "The Lovers"){
+                                if(order.player instanceof Array && order.player.includes(req.body.target_kill)){
+        
+                                    // lovers = order.player // ----> WARNING: CANNOT USE THIS EXPRESSION BECAUSE WHEN ORDER.PLAYER GETS CHANGED, LOVERS WILL GET CHANGED
+        
+                                    lovers = order.player.map(p => {return p}) // ----> TO INITIALIZE A NEW ARRAY FROM EXISTING ARRAY, USE MAP
+                                    isInLove = true
+                                }
+                                return false
+                            }
+                            return true
+                        })
+
+
+                        if(lovers.length > 0){ //meaning there is a couple
+                            //Update the first lover's status
+                            Player.updateOne({'username': lovers[0]}, {$inc: {'status.dead': 1}}, (err, result) => {
+                                if(err) return console.log(err)
+
+                                if(result !== null){
+                                    //Update the second lover's status
+                                    Player.updateOne({'username': lovers[1]}, {$inc: {'status.dead': 1}}, (err, result) => {
+                                        if(err) return console.log(err)
+
+                                        if(result !== null){
+                                            res.send("ok")
+                                        }
+                                    })
+                                }
+                            })
                         }
 
-                        else
-                            res.send('No document found')
-                    })
+                        else{
+                            //Update the player's status
+                            Player.updateOne({'username': req.body.target_kill}, {$inc: {'status.dead': 1}}, (err, result) => {
+                                if(err) return console.log(err)
+
+                                if(result !== null){
+                                    res.send("ok")
+                                }
+                            })
+                        }
+                    }
+                })
+
+                
             }
 
             else
                 res.send(result)
         })
+        .catch(err => console.log(err))
     })
 })
 
