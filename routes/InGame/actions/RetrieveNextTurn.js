@@ -169,7 +169,7 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
                 callingOrder.every((order, index) => {
                     if(order.name === "The Lovers"){
                         if(order.player instanceof Array && order.player.includes(chosenTarget)){
-                            lovers = order.player
+                            lovers = order.player.map((p) => {return p})
                             isInLove = true
                         }
                         return false
@@ -184,16 +184,26 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
                         if(player === chosenTarget)
                             promises.push(
                                 new Promise((resolve, reject) => {
-                                    //Update the lover's status in 'Players' collection
-                                    Player.updateOne({'roomid': req.params.roomid, 'username': player}, {$inc: {'status.dead': 1}, $set: {'killedByWerewolves': true}}, (err, result) => {
-                                        if(err) console.log(err)
+                                    //Update the chosenTarget's status in 'Players' collection
+                                    Player.findOne({'username': player}, {'status': 1, 'killedByWerewolves': 1, '_id': 0}, (err, result) => {
+                                        if(err) reject(err)
 
                                         if(result !== null){
-                                            resolve(result)
-                                        }
+                                            let status = result.status,
+                                                killedByWerewolves = result.killedByWerewolves
+                                            
+                                            if(status["dead"] < 1){
+                                                status["dead"] += 1
+                                                killedByWerewolves = true
+                                            }
 
-                                        else{
-                                            reject("No such document")
+                                            Player.updateOne({'username': player}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
+                                                if(err) reject(err)
+
+                                                if(result !== null){
+                                                    resolve(result)
+                                                }
+                                            })
                                         }
                                     })
                                 })
@@ -202,15 +212,25 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
                             promises.push(
                                 new Promise((resolve, reject) => {
                                     //Update the lover's status in 'Players' collection
-                                    Player.updateOne({'roomid': req.params.roomid, 'username': player}, {$inc: {'status.dead': 1}, $set: {'killedByWerewolves': false}}, (err, result) => {
-                                        if(err) console.log(err)
+                                    Player.findOne({'username': player}, {'status': 1, 'killedByWerewolves': 1, '_id': 0}, (err, result) => {
+                                        if(err) reject(err)
 
                                         if(result !== null){
-                                            resolve(result)
-                                        }
+                                            let status = result.status,
+                                                killedByWerewolves = result.killedByWerewolves
+                                            
+                                            if(status["dead"] < 1){
+                                                status["dead"] += 1
+                                                killedByWerewolves = false
+                                            }
 
-                                        else{
-                                            reject("No such document")
+                                            Player.updateOne({'username': player}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
+                                                if(err) reject(err)
+
+                                                if(result !== null){
+                                                    resolve(result)
+                                                }
+                                            })
                                         }
                                     })
                                 })
@@ -269,6 +289,7 @@ module.exports = (io) => {
                     url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-round-ends'
                 })
                 .then(res => {
+                    console.log(res.data)
                     if(res.data === "Human won"){
                         igIO.in(data.roomid).emit('GameEnds', res.data)
                     }
