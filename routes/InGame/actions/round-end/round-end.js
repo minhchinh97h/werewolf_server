@@ -450,8 +450,8 @@ module.exports = (io) => {
     reIO.setMaxListeners(Infinity)
 
     //inside requestToHangPlayer, we calculate the chosenTarget which is the final hanged player and update to the database
-    const requestToHangPlayer = (data) => {
-        axios({
+    const requestToHangPlayer = async (data) => {
+        await axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-hang-player',
             data: data
@@ -472,8 +472,8 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
-    const RequestToEndRound = (data) => {
-        axios({
+    const RequestToEndRound = async (data) => {
+        await axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-to-end-round',
             data: data
@@ -504,11 +504,10 @@ module.exports = (io) => {
         })
 
         socket.on('RequestToEndRound', data => {
+            console.log(data)
             RequestToEndRound(data)
         })
-        // socket.on('RequestToGetHangPlayer', roomid => {
-        //     requestToGetHangPlayer(roomid, socket)
-        // })
+
     })
 
     return router

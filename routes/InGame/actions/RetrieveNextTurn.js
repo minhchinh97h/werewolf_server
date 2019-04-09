@@ -248,7 +248,7 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
                 //If only the player is killed, not in love with anyone else, then update its status in Players collection
                 else{
                     //Update the player's status in 'Players' collection
-                    Player.updateOne({'roomid': req.params.roomid, 'username': chosenTarget}, {$inc: {'status.dead': 1}, $set: {'killedByWerewolves': true}}, (err, result) => {
+                    Player.updateOne({'roomid': req.params.roomid, 'username': chosenTarget}, {$set: {'killedByWerewolves': true, 'status.dead': 1}}, (err, result) => {
                         if(err) console.log(err)
 
                         if(result !== null){
@@ -270,8 +270,8 @@ module.exports = (io) => {
         rreIO = io.of('/retrieve-round-ends'),
         igIO = io.of('/in-game')
 
-    const getNextTurn = (data) => {
-        axios({
+    const getNextTurn = async (data) => {
+        await axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-next-turn',
             data: {
@@ -316,8 +316,8 @@ module.exports = (io) => {
     }
 
     //For controlling the end turn button, check whether all the werewolves end the turn so can proceed next turn
-    const getWerewolfEndTurn = (data) => {
-        axios({
+    const getWerewolfEndTurn = async (data) => {
+        await axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-next-turn-for-werewolves',
             data: data
@@ -331,8 +331,8 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
-    const getFinalKill = (data) => {
-        axios({
+    const getFinalKill = async (data) => {
+        await axios({
             method: 'post',
             url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/werewolves-final-kill',
             data: data

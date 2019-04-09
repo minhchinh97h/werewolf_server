@@ -155,7 +155,6 @@ router.get('/:roomid', (req, res, next) => {
                     playerRoles.forEach((player, playerIndex) => {
                         
                         if(order.name === player.role){
-                            console.log(player + ' ' + order.name)
                             // if(player.role !== 'Witch'){
                             //     arrangedOrder[index]({
                             //         'name': player.name,
