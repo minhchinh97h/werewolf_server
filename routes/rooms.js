@@ -40,7 +40,7 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
                                                                 'timeCreated': req.body.timeCreated,
                                                                 'numberOfPlayers': req.body.numberOfPlayers,
                                                                 'players': [req.body.players],
-                                                                'currentPlayers': [req.body.players],
+                                                                'totalPlayers': [req.body.players],
                                                                 'status': req.body.status,
                                                                 'currentRoles': req.body.currentRoles,
                                                                 'recommendedRoles': req.body.recommendedRoles
@@ -101,7 +101,7 @@ router.post('/:roomid/update', (req, res, next) => {
         var username = req.body.username
 
         //increase the numberOfPlayers field and push the new username into players field
-        Room.updateOne({'roomid': req.body.roomid}, { $inc: { 'numberOfPlayers': 1 },  $push: {'players': username} } , (err, result) => {
+        Room.updateOne({'roomid': req.body.roomid}, { $inc: { 'numberOfPlayers': 1 },  $push: {'players': username, 'totalPlayers': username} } , (err, result) => {
             if(err) return console.log(err)
 
             if(result !== null){

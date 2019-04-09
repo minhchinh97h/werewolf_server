@@ -6,6 +6,7 @@ var roomSchema = new mongoose.Schema({
     timeCreated: Number,
     numberOfPlayers: Number,
     players: [String],
+    totalPlayers: [String],
     currentPlayers: [String],
     status: {
         type: String,

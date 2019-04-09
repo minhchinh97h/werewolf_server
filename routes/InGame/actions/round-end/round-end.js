@@ -222,7 +222,7 @@ router.get('/:roomid/request-to-get-hang-player', (req, res, next) => {
 
 function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
     callingOrder.forEach((order, index, arr) => {
-        if(order.player instanceof Array){
+        if(order.player instanceof Array && order.name !== "The hypnotized"){
             order.player.every((player, i, playerArr) => {
                 if(player === chosenTarget){
                     playerArr.splice(i, 1)
@@ -287,12 +287,13 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
             if(err) return console.log(err)
 
             if(result !== null){
-                Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0, 'players': 1}, (err, result) => {
+                Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0, 'players': 1, 'totalPlayers': 1}, (err, result) => {
                     if (err) return console.log(err)
 
                     if(result !== null){
                         let callingOrder = result.callingOrder,
                             players = result.players,
+                            totalPlayers = result.totalPlayers
                             allPlayersPressedEndRoundButton = true
 
                         //To check whether all the players have pressed the end round button in order to proceed next round 
@@ -334,7 +335,7 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                             //of werewolves is half or more half of the total players
                             else{
                                 callingOrder.every((order, index, arr) => {
-                                    if(order.name === "Werewolves" && order.player instanceof Array && order.player.length >= (Math.ceil(players.length/2))){
+                                    if(order.name === "Werewolves" && order.player instanceof Array && order.player.length >= (Math.ceil(totalPlayers.length/2))){
                                         werewolvesWon = true
                                         return false
                                     }

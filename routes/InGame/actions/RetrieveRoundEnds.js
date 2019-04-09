@@ -22,12 +22,13 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
 
     db.once('open', () => {
         //Check if the game is closed by any side has won the game (Human, Werewolves, Piper, Lover if there is a couple of human and werewolf)
-        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, 'players': 1, '_id': 0}, (err, result) => {
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, 'players': 1, 'totalPlayers': 1, '_id': 0}, (err, result) => {
             if(err) return console.log(err)
 
             if(result !== null){
                 let callingOrder = result.callingOrder,
                     players = result.players,
+                    totalPlayers = result.totalPlayers,
                     humanWon = false,
                     werewolvesWon = false,
                     loversWon = false,
@@ -69,7 +70,7 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
                                 if(order.player instanceof Array && order.player > 0){
                                     //If he does then proceed checking
                                     callingOrder.every((order, index, arr) => {
-                                        if(order.name === "The hypnotized" && order.player instanceof Array && order.player.length === (players.length-1)){
+                                        if(order.name === "The hypnotized" && order.player instanceof Array && order.player.length === (totalPlayers.length-1)){
                                             piperWon = true
                                             return false
                                         }
@@ -146,7 +147,7 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
                                                 
                                                 //Eliminiate dead players from callingOrder field
                                                 callingOrder.forEach((order, i, arr) => {
-                                                    if(order.player instanceof Array)
+                                                    if(order.player instanceof Array && order.name !== "The hypnotized")
                                                         order.player.forEach((player, index, playerArr) => {
                                                             if(sendingData.dead.includes(player) && sendingData.dead instanceof Array)
                                                                 playerArr.splice(index, 1)
