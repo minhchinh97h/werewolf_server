@@ -289,7 +289,6 @@ module.exports = (io) => {
                     url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-round-ends'
                 })
                 .then(res => {
-                    console.log(res.data)
                     if(res.data === "Human won"){
                         igIO.in(data.roomid).emit('GameEnds', res.data)
                     }
