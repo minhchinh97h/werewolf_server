@@ -69,6 +69,11 @@ class CallingOrderConstructor {
                 '1stNight': false
             },
             {
+                'name': 'Werewolves false role',
+                'special': true,
+                'playerAndFalseRole': {}
+            },
+            {
                 'name': 'The wild child',
                 'when': 5,
                 'player': [],

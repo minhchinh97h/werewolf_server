@@ -79,6 +79,60 @@ router.get('/:roomid/werewolves-get', (req, res, next) => {
     })
 })
 
+//Get number of false roles based on the number of werewolves
+router.get('/:roomid/werewolves-get-false-roles', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        Room.findOne({"roomid": req.params.roomid}, {'unusedRoles': 1, '_id': 0, 'callingOrder': 1}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                let unusedRoles = result.unusedRoles,
+                    callingOrder = result.callingOrder
+
+                let unusedRoleName_arr = [],
+                    numberOfWerewolves 
+
+                unusedRoles.forEach((order) => {
+                    unusedRoleName_arr.push(order.name)
+                })
+
+                //Get number of werewolves
+                callingOrder.every((order) => {
+                    if(order.name === "Werewolves" && order.player instanceof Array){
+                        numberOfWerewolves = order.player.length
+                        return false
+                    }
+
+                    return true
+                })
+
+                if(unusedRoleName_arr.length <= numberOfWerewolves){
+                    res.send(unusedRoleName_arr)
+                }
+
+                else{
+                    let sendingFalseRoles = []
+
+                    for(var i = 0; i < numberOfWerewolves; i++){
+                        let randomIndex = Math.floor(Math.random() * (unusedRoleName_arr.length - 1))
+
+                        sendingFalseRoles.push(unusedRoleName_arr[randomIndex])
+                        unusedRoleName_arr.splice(randomIndex, 1)
+                    }
+
+                    res.send(sendingFalseRoles)
+                }
+            }
+        })
+    })
+})
+
 
 module.exports = (io) => {
     let wwIO = io.of('/werewolves')
@@ -112,6 +166,17 @@ module.exports = (io) => {
         })
     }
 
+    const GetFalseRoles = (data, socket) => {
+        axios({
+            method: 'get',
+            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/werewolves-get-false-roles'
+        })
+        .then(res => {
+            socket.emit("FalseRoles", res.data)
+        })
+        .catch(err => console.log(err))
+    }
+
     wwIO.on('connect', (socket) => {
         socket.on('JoinRoom', roomid => {
             socket.join(roomid)
@@ -127,6 +192,14 @@ module.exports = (io) => {
 
         socket.on('RequestToAgreeKill', data => {
             RequestToAgree(data, socket)
+        })
+
+        socket.on('GetFalseRoles', data => {
+            GetFalseRoles(data, socket)
+        })
+
+        socket.on('RequestFalseRoleChoice', data => {
+            wwIO.in(data.roomid).emit('FalseRoleChoice', data)
         })
     })
 

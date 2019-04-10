@@ -9,7 +9,7 @@ var roomSchema = require('../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
-var callingOrderConstructor = require('../../calling-order/callingOrder')
+var callingOrderConstructor = require('../../calling-order/callingOrder') //module.export will make the origin changed if it is changed anywhere else across the application
 
 
 
@@ -23,11 +23,13 @@ router.get('/:roomid', (req, res, next) => {
 
     db.once('open', () => {
         
-        Room.findOne({'roomid': req.params.roomid}, {'players': 1, '_id': 0, 'currentRoles': 1}, (err, result) => {
+        Room.findOne({'roomid': req.params.roomid}, {'players': 1, '_id': 0, 'currentRoles': 1, 'unusedRoles': 1}, (err, result) => {
             if(err) console.log(err)
             
             if(result !== null){
-                var callingOrder = new callingOrderConstructor().GetCallingOrder()
+                let callingOrder = new callingOrderConstructor().GetCallingOrder(),
+                    players = result.players,
+                    unusedRoles = result.unusedRoles
                 
                 let playerRoles = []
                 
@@ -57,28 +59,37 @@ router.get('/:roomid', (req, res, next) => {
 
                 let numberOfWerewolves = result.currentRoles['Werewolves']
 
-                let numberOfPlayersIndex = result.players.length -1
+                // let numberOfPlayersIndex = result.players.length -1
 
-                let chosenIndex = [numberOfWerewolves]
+                let werewolvesNameArr = []
 
-                for(let i = 0; i < numberOfWerewolves; i++){
+                for(let i = 1; i <= numberOfWerewolves; i++){
                     //randomize the index based on the number of player -1 (index)
-                    chosenIndex[i] = Math.floor(Math.random() * numberOfPlayersIndex)
+                    // chosenIndex[i] = Math.floor(Math.random() * numberOfPlayersIndex)
+
 
                     //below is the function to check if the current index is uniqe, if not, try again
                     //the function will end when it guarantees no chosen index is repeated
-                    checkIfEquals(chosenIndex, i, i-1, numberOfPlayersIndex)
+                    // checkIfEquals(chosenIndex, i, i-1, numberOfPlayersIndex)
+
+                    let randomIndex = Math.floor(Math.random() * (players.length -1))
+
+                    werewolvesNameArr.push(players[randomIndex])
+                    players.splice(randomIndex, 1)
+
                 }
 
 
                 //then, assign werewolves according to the chosen index
-                result.players.forEach((name, index) => {
-                    chosenIndex.forEach((chosenIndex) => {
-                        if(index === chosenIndex)
-                            playerRoles[index].role = 'Werewolves'
+                playerRoles.forEach((playerRole, index, arr) => {
+                    werewolvesNameArr.every((werewolfName) => {
+                        if(playerRole.name === werewolfName){
+                            arr[index].role = "Werewolves"
+                            return false
+                        }
+                        return true
                     })
                 })
-
 
 
                 //1st randomization of no_wolf_roles (Fisher-Yates shuffle)
@@ -193,6 +204,44 @@ router.get('/:roomid', (req, res, next) => {
                     }
                 })  
 
+                //Get other unused roles from currentRoles
+
+                //get the names of total picked roles
+                let currentRoles_arr = []
+                for(var key in result.currentRoles){
+                    if(result.currentRoles.hasOwnProperty(key)){
+                        if(result.currentRoles[key] > 0){
+                            currentRoles_arr.push(key)
+                        }
+                    }
+                }
+
+                currentRoles_arr.forEach((currentRole) => {
+                    let found = true
+                    newCallingOrder.every((newOrder, index, arr) => {
+                        if(newOrder.name === currentRole){
+                            found = true
+                            return false
+                        }
+
+                        else{
+                            found = false
+                            return true
+                        }
+                    })
+
+                    if(!found){
+                        callingOrder.every((order) => {
+                            if(order.name === currentRole){
+                                unusedRoles.push(order)
+                                return false
+                            }
+                            return true
+                        })
+                    }
+                })
+
+
                 //get the players that are werewolves
                 let werewolfPlayers = newCallingOrder.map((order) => {
                     if(order.name === "Werewolves"){
@@ -245,7 +294,7 @@ router.get('/:roomid', (req, res, next) => {
                 })
 
                 //update the relevant row in rooms collection
-                Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': newCallingOrder }}, (err, result) => {
+                Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': newCallingOrder, 'unusedRoles': unusedRoles }}, (err, result) => {
                     if(err) return console.log(err)
 
                     if(result !== null){

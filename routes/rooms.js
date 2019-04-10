@@ -43,6 +43,7 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
                                                                 'totalPlayers': [req.body.players],
                                                                 'status': req.body.status,
                                                                 'currentRoles': req.body.currentRoles,
+                                                                'unusedRoles': [],
                                                                 'recommendedRoles': req.body.recommendedRoles
 
                 }}, {upsert: true}, (err, result) => {

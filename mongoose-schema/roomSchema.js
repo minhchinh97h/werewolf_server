@@ -73,6 +73,7 @@ var roomSchema = new mongoose.Schema({
         player: [String]
     },
     callingOrder: [Object],
+    unusedRoles: [Object],
     playerCurrentStatus: [Object]
 })
 
