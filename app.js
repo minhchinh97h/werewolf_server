@@ -39,6 +39,7 @@ var getNextTurnRouter = require('./routes/InGame/actions/RetrieveNextTurn')(io)
 var getRoundEndsRouter = require('./routes/InGame/actions/RetrieveRoundEnds')(io)
 
 var getRoundEndHandlerRouter = require('./routes/InGame/actions/round-end/round-end')(io)
+var closeGameRouter = require('./routes/closeGame')(io)
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -72,7 +73,7 @@ app.use('/in-game/actions', piperActionRouter)
 app.use('/in-game/actions', witchActionRouter)
 app.use('/in-game/actions', werewolvesActionRouter)
 app.use('/in-game/actions', saviorActionRouter)
-
+app.use('/close', closeGameRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

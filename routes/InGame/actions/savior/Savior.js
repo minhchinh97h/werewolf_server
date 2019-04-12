@@ -157,7 +157,9 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
 })
 
 module.exports = (io) => {
-    saviorIO = io.of('/savior')
+    let saviorIO = io.of('/savior')
+
+    saviorIO.setMaxListeners(Infinity)
 
     const RequestToProtectPlayer = (data, socket) => {
         axios({

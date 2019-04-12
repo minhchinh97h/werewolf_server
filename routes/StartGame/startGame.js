@@ -299,6 +299,15 @@ router.get('/:roomid', (req, res, next) => {
                     }
                 })
 
+                //Don't add Ordinary Townsfolk role
+                newCallingOrder.every((order, index, arr) => {
+                    if(order.name === "Ordinary Townsfolk"){
+                        arr.splice(index, 1)
+                        return false
+                    }
+                    return true
+                })
+
                 //update the relevant row in rooms collection
                 Room.updateOne( {'roomid': req.params.roomid}, { $set: { 'callingOrder': newCallingOrder, 'unusedRoles': unusedRoles }}, (err, result) => {
                     if(err) return console.log(err)
@@ -374,9 +383,6 @@ module.exports = (io) => {
             startGame(data)
         })
 
-        startGameIO.on('disconnect', () => {
-            console.log('start game user disconnected')
-        })
     })
 
     

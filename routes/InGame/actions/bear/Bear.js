@@ -55,6 +55,8 @@ module.exports = (io) => {
 
     let bearIO = io.of('bear')
 
+    bearIO.setMaxListeners(Infinity)
+
     const ScentPlayer = (data, socket) => {
         axios({
             method: 'post',

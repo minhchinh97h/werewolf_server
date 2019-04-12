@@ -323,6 +323,8 @@ router.get('/:roomid/witch-left-abilities', (req, res, next) => {
 module.exports = (io) => {
     let witchIO = io.of('/witch')
 
+    witchIO.setMaxListeners(Infinity)
+
     const RequestToKillPlayer = (data, socket) => {
         axios({
             method: 'post',

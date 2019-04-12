@@ -69,6 +69,26 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
+    const PlayerExit = (data) => {
+        axios({
+            method: 'post',
+            url: 'http://localhost:3001/close',
+            data: data
+        })
+        .then(res => {
+            if(res.data === "ok"){
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:3001/main-page/' + data.roomid
+                })
+                .then(res => {
+                    io.of('/main-page').in(data.roomid).emit('GetPlayers', res.data)
+                })
+            }
+        })
+        .catch(err => console.log(err))
+    }
+
     io.of('/main-page').on('connect', socket => {
         socket.on('RequestToGetPlayersAndJoinRoom', roomid => {
             socket.join(roomid)
@@ -79,8 +99,12 @@ module.exports = (io) => {
             getPlayers(data, socket)
         })
 
-        io.of('/main-page').on('disconnect', () => {
-            console.log('main page user disconnected')
+        socket.on('JoinRoom', roomid => {
+            socket.join(roomid)
+        })
+
+        socket.on('Exit', data => {
+            PlayerExit(data)
         })
     })
 

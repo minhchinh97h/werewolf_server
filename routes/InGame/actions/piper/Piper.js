@@ -81,6 +81,9 @@ module.exports = (io) => {
     let piperIO = io.of('/piper')
     let inGameIO = io.of('/in-game')
 
+    piperIO.setMaxListeners(Infinity)
+    inGameIO.setMaxListeners(Infinity)
+
     const requestToCharm = (data, socket) => {
         axios({
             method: 'post',
@@ -110,10 +113,6 @@ module.exports = (io) => {
     piperIO.on('connect', (socket) => {
         socket.on("RequestToCharmPlayers", data => {
             requestToCharm(data, socket)
-        })
-
-        socket.on('disconnect', () => {
-            console.log('the fox user disconnected')
         })
     })
     return router

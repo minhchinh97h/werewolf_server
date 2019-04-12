@@ -117,6 +117,9 @@ module.exports = (io) => {
 
     let inGameIO = io.of('/in-game')
 
+    cupidIO.setMaxListeners(Infinity)
+    inGameIO.setMaxListeners(Infinity)
+
     const requestConnect = (data, socket) => {
         axios({
             method: 'post',

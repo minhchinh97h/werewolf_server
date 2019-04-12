@@ -494,7 +494,8 @@ module.exports = (io) => {
         igIO = io.of('/in-game')
 
     reIO.setMaxListeners(Infinity)
-
+    igIO.setMaxListeners(Infinity)
+    
     //inside requestToHangPlayer, we calculate the chosenTarget which is the final hanged player and update to the database
     const requestToHangPlayer = (data) => {
         axios({
@@ -550,7 +551,6 @@ module.exports = (io) => {
         })
 
         socket.on('RequestToEndRound', data => {
-            console.log(data)
             RequestToEndRound(data)
         })
 

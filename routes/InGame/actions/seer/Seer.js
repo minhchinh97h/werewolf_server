@@ -41,6 +41,8 @@ module.exports = (io) => {
 
     let seerIO = io.of('/seer')
 
+    seerIO.setMaxListeners(Infinity)
+
     const revealPlayerRole = (data, socket) => {
         axios({
             method: 'post',
@@ -63,10 +65,6 @@ module.exports = (io) => {
 
         socket.on('Request', data => {
             revealPlayerRole(data, socket)
-        })
-
-        seerIO.on('disconnect', () => {
-            console.log('user disconnected')
         })
     })
 

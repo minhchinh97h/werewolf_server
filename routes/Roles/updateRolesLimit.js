@@ -85,10 +85,6 @@ module.exports = (io) => {
             updateRolesLimit(data)
         })
 
-
-        updateRolesLimitIO.on('disconnect', () => {
-            console.log('update roles limit user disconnected')
-        })
     })
 
     return router

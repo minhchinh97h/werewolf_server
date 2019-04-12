@@ -176,5 +176,11 @@ module.exports = (io) => {
         })
     })
 
+    io.on('connect', socket => {
+        socket.on('disconnect', () => {
+            console.log("user disconnect")
+        })
+    })
+
     return router
 };

@@ -266,6 +266,8 @@ module.exports = (io) => {
 
     let rreIO = io.of('/retrieve-round-ends')
 
+    rreIO.setMaxListeners(Infinity)
+
     rreIO.on('connect', (socket) => {
         socket.on('JoinRoom', roomid => {
             socket.join(roomid)

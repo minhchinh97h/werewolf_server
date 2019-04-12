@@ -30,7 +30,7 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
                 //Sort out not special roles
                 let notSpecialRole = callingOrder.filter((order) => {return !order.special || order.name === "current called role"})
                 
-                notSpecialRole.forEach((order, index) => {
+                notSpecialRole.every((order, index) => {
                     if(req.body.role === order.name){
                         if(index < (notSpecialRole.length - 1)){
                             for(let i = index + 1; i < notSpecialRole.length; i++){
@@ -45,6 +45,7 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
                                         if(err) return console.log(err)
 
                                         if(result !== null){
+
                                             //Roles that not Werewolves can only be called once per player
                                             if(notSpecialRole[i].name !== "Werewolves"){
                                                 res.send(notSpecialRole[i].player[0])
@@ -60,13 +61,20 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
                                     break
                                 }
 
+                                else{
+                                    res.send("round ends")
+                                }
                             }
                         }
                         
                         else{
                             res.send("round ends")
                         }
+
+                        return false
                     }
+
+                    return true
                 })
             }
         })
@@ -270,6 +278,11 @@ module.exports = (io) => {
         rreIO = io.of('/retrieve-round-ends'),
         igIO = io.of('/in-game')
 
+    rntIO.setMaxListeners(Infinity)
+    wwIO.setMaxListeners(Infinity)
+    rreIO.setMaxListeners(Infinity)
+    igIO.setMaxListeners(Infinity)
+    
     const getNextTurn = (data) => {
         axios({
             method: 'post',
@@ -323,7 +336,6 @@ module.exports = (io) => {
         })
         .then(res => {
             if(res.data === "all werewolves pressed"){
-                
                 getNextTurn(data)
             }
         })

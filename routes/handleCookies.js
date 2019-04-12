@@ -44,9 +44,6 @@ module.exports = (io) => {
 
         testCookies(socket)
 
-        io.on('disconnect', () => {
-            console.log('disconnected - cookies request form ' + username + ' - ' + roomid)
-        })
     })
 
 

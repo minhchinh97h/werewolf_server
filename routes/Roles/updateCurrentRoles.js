@@ -50,6 +50,9 @@ module.exports = (io) => {
     let submitCurrentRolesIO = io.of('/submit-selected-cards')
     let getCurrentRolesIO = io.of('/get-current-roles')
 
+    submitCurrentRolesIO.setMaxListeners(Infinity)
+    getCurrentRolesIO.setMaxListeners(Infinity)
+    
     const updateCurrentRoles = async (data) => {
         await axios({
             method: 'post',
@@ -82,21 +85,12 @@ module.exports = (io) => {
             socket.join(data.roomid)
             updateCurrentRoles(data)
         })
-
-
-        submitCurrentRolesIO.on('disconnect', () => {
-            console.log('submit selected card user disconnected')
-        })
     })
 
     getCurrentRolesIO.on('connect', socket => {
         socket.on('JoinRoom', data => {
             socket.join(data)   
             getCurrentRoles(data)
-        })
-
-        getCurrentRolesIO.on('disconnect', () => {
-            console.log('get current roles user disconnected')
         })
     })
     return router

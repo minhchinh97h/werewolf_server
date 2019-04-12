@@ -126,10 +126,6 @@ module.exports = (io) => {
             getTheFirstTurn(data)
         })
 
-        inGameIO.on('disconnect', () => {
-            console.log('in game user disconnected')
-        })
-
         socket.on("RequestToRetrieveCharmPlayers", data => {
             getAllHypnotized(data, socket)
         })

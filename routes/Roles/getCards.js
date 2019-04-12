@@ -48,10 +48,6 @@ module.exports = (io) => {
 
     io.of('get-cards').on('connect', socket => {
         getCards(socket)
-
-        io.of('get-cards').on('disconnect', () =>{
-            console.log('get card user disconnected')
-        })
     })
 
     return router

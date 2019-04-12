@@ -61,6 +61,8 @@ router.post('/:roomid/the-fox-scent', (req, res, next) => {
 module.exports = (io) => {
     let foxIO = io.of('/the-fox')
 
+    foxIO.setMaxListeners(Infinity)
+
     const requestFoxScent = (data, socket) => {
         axios({
             method: 'post',
@@ -81,9 +83,6 @@ module.exports = (io) => {
             requestFoxScent(data, socket)
         })
 
-        socket.on('disconnect', () => {
-            console.log('the fox user disconnected')
-        })
     })
 
     return router
