@@ -183,7 +183,7 @@ router.post('/:roomid/werewolves-set-false-role', (req, res, next) => {
 
     db.once('open', () => {
         Room.findOneAndUpdate({'roomid': req.params.roomid},
-                                {$push: {'unusedRoles.$[element].player': req.body.werewolf}},
+                                {$push: {'unusedRoles.$[element].player': req.body.wolfName}},
                                 {arrayFilters: [{'element.name': req.body.falseRole}]},
                                 (err, result) => {
             if(err) return console.log(err)
@@ -211,7 +211,7 @@ router.get('/:roomid/werewolves-get-other-false-role', (req, res, next) => {
                     sendingData = []
 
                 unusedRoles.forEach((role) => {
-                    if(role.player instanceof Array && role.player > 0){
+                    if(role.player instanceof Array && role.player.length > 0){
                         sendingData.push({
                             falseRole: role.name,
                             wolfName: role.player[0] 

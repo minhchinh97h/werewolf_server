@@ -388,7 +388,8 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                             res.send('Lovers won')
                                         }
 
-                                        //If not any side has won the game yet, reset round end's, round end target's, end round action's, Werewolves current target's
+                                        //If not any side has won the game yet, reset round end's, round end target's, end round action's, Werewolves current target's,
+                                        //Werewolves end turn's, Werewolves end vote's
                                         else{
                                             callingOrder.forEach((order, index, arr) => {
                                                 if(order.name === "round end"){
@@ -418,6 +419,26 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                                     arr[index].player = player
                                                 }
 
+                                                else if (order.name === "Werewolves end vote"){
+                                                    let receiveEndVoteObject = order.receiveEndVoteObject
+                                                    for(var key in receiveEndVoteObject){
+                                                        if(receiveEndVoteObject.hasOwnProperty(key)){
+                                                            receiveEndVoteObject[key] = false
+                                                        }
+                                                    }
+                                                    arr[index].receiveEndVoteObject = receiveEndVoteObject
+                                                }
+
+                                                else if(order.name === "Werewolves end turn"){
+                                                    let receiveEndTurnObject = order.receiveEndTurnObject
+                                                    for(var key in receiveEndTurnObject){
+                                                        if(receiveEndTurnObject.hasOwnProperty(key)){
+                                                            receiveEndTurnObject[key] = false
+                                                        }
+                                                    }
+                                                    arr[index].receiveEndTurnObject = receiveEndTurnObject
+                                                }
+                                                
                                                 else if(order.name === "Werewolves current target"){
                                                     arr[index].player.length = 0
                                                     arr[index].chosen = ''
