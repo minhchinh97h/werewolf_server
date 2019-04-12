@@ -94,22 +94,28 @@ router.get('/:roomid/retrieve-round-ends', (req, res, next) => {
 
                             if(order.name === "Werewolves end vote"){
                                 let receiveEndVoteObject = order.receiveEndVoteObject
+                                
+                                sendingData.dead.forEach((d) => {
+                                    if(receiveEndVoteObject.hasOwnProperty(d)){
+                                        delete receiveEndVoteObject[d]
+                                    }
+                                })
+                                
                     
-                                if(receiveEndVoteObject.hasOwnProperty(chosenTarget)){
-                                    delete receiveEndVoteObject[chosenTarget]
-                                }
-                    
-                                arr[index].receiveEndVoteObject = receiveEndVoteObject
+                                arr[i].receiveEndVoteObject = receiveEndVoteObject
                             }
                     
                             if(order.name === "Werewolves end turn"){
                                 let receiveEndTurnObject = order.receiveEndTurnObject
+                                
+                                sendingData.dead.forEach((d) => {
+                                    if(receiveEndTurnObject.hasOwnProperty(d)){
+                                        delete receiveEndTurnObject[d]
+                                    }
+                                })
+                                
                     
-                                if(receiveEndTurnObject.hasOwnProperty(chosenTarget)){
-                                    delete receiveEndTurnObject[chosenTarget]
-                                }
-                    
-                                arr[index].receiveEndTurnObject = receiveEndTurnObject
+                                arr[i].receiveEndTurnObject = receiveEndTurnObject
                             } 
                         })
 
