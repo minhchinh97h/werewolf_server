@@ -252,6 +252,26 @@ function EliminateTheHangedPlayerFromCallingInTurn(chosenTarget, callingOrder){
 
             arr[index].player = player
         }
+
+        if(order.name === "Werewolves end vote"){
+            let receiveEndVoteObject = order.receiveEndVoteObject
+
+            if(receiveEndVoteObject.hasOwnProperty(chosenTarget)){
+                delete receiveEndVoteObject[chosenTarget]
+            }
+
+            arr[index].receiveEndVoteObject = receiveEndVoteObject
+        }
+
+        if(order.name === "Werewolves end turn"){
+            let receiveEndTurnObject = order.receiveEndTurnObject
+
+            if(receiveEndTurnObject.hasOwnProperty(chosenTarget)){
+                delete receiveEndTurnObject[chosenTarget]
+            }
+
+            arr[index].receiveEndTurnObject = receiveEndTurnObject
+        } 
     })
 
     return callingOrder
