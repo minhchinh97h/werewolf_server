@@ -273,24 +273,30 @@ router.get('/:roomid', (req, res, next) => {
                         }
                     })
                 })
-                //Update newCallingOrder with werewolves end turn's receiveEndTurnObject 
-                let receiveEndTurnObject = {}
-                newCallingOrder.every((order) => {
+
+                //Update newCallingOrder with werewolves end turn's receiveEndTurnObject and werewolves end vote's receiveEndVoteObject
+                let receiveEndTurnObject = {},
+                    receiveEndVoteObject = {}
+
+                newCallingOrder.forEach((order) => {
                     if(order.name === "Werewolves"){
                         order.player.forEach((player) => {
                             receiveEndTurnObject[player] = false
+                            receiveEndVoteObject[player] = false
                         })
                         return false
                     }
                     return true
                 })
 
-                newCallingOrder.every((order, index, arr) => {
+                //Update Werewolves end vote & Werewolves end turn
+                newCallingOrder.forEach((order, index, arr) => {
+                    if(order.name === "Werewolves end vote"){
+                        arr[index].receiveEndVoteObject = receiveEndVoteObject
+                    }
                     if(order.name === "Werewolves end turn"){
                         arr[index].receiveEndTurnObject = receiveEndTurnObject
-                        return false
                     }
-                    return true
                 })
 
                 //update the relevant row in rooms collection

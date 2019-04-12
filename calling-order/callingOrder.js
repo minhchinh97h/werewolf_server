@@ -57,6 +57,11 @@ class CallingOrderConstructor {
                 '1stNight': false
             },
             {
+                'name': 'Werewolves end vote',
+                'special': true,
+                'receiveEndVoteObject': {}
+            },
+            {
                 'name': 'Werewolves end turn',
                 'special': true,
                 'receiveEndTurnObject': {}

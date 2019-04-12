@@ -45,7 +45,47 @@ router.post('/:roomid/werewolves-agree', (req, res, next) => {
                     if(err) return console.log(err)
 
                     if(result !== null){
-                        res.send('ok')
+                        //change the boolean to true in Werewolves end vote's
+                        Room.findOneAndUpdate({'roomid': req.params.roomid},
+                                                {$set: {[`callingOrder.$[element].receiveEndVoteObject.${req.body.werewolf}`]: true}},
+                                                {arrayFilters: [{'element.name': 'Werewolves end vote'}]}, 
+                                                (err, result) => {
+                            if(err) return console.log(err)
+
+                            if(result !== null){
+                                //Check whether all the werewolves have voted
+                                Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+                                    if(err) return console.log(err)
+
+                                    if(result !== null){
+                                        let callingOrder = result.callingOrder,
+                                            allWerewolvesVoted = true
+
+                                        callingOrder.every((order) => {
+                                            if(order.name === 'Werewolves end vote'){
+                                                receiveEndVoteObject = order.receiveEndVoteObject
+                                                for(var key in order.receiveEndVoteObject){
+                                                    if(order.receiveEndVoteObject.hasOwnProperty(key)){
+                                                        if(!order.receiveEndVoteObject[key]){
+                                                            allWerewolvesVoted = false
+                                                            return false
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            return true
+                                        })
+
+                                        if(allWerewolvesVoted){
+                                            res.send('all werewolves voted')
+                                        }
+
+                                        else
+                                            res.send('not all werewolves voted')
+                                    }
+                                })
+                            }
+                        })
                     }
                 })
             }
@@ -134,6 +174,57 @@ router.get('/:roomid/werewolves-get-false-roles', (req, res, next) => {
 })
 
 
+router.post('/:roomid/werewolves-set-false-role', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        Room.findOneAndUpdate({'roomid': req.params.roomid},
+                                {$push: {'unusedRoles.$[element].player': req.body.werewolf}},
+                                {arrayFilters: [{'element.name': req.body.falseRole}]},
+                                (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                res.send(req.body)
+            }
+        })
+    })
+})
+
+router.get('/:roomid/werewolves-get-other-false-role', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        Room.findOne({'roomid': req.params.roomid}, {'unusedRoles': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                let unusedRoles = result.unusedRoles,
+                    sendingData = []
+
+                unusedRoles.forEach((role) => {
+                    if(role.player instanceof Array && role.player > 0){
+                        sendingData.push({
+                            falseRole: role.name,
+                            wolfName: role.player[0] 
+                        })
+                    }
+                })
+
+                res.send(sendingData)
+            }
+        })
+    })
+})
+
 module.exports = (io) => {
     let wwIO = io.of('/werewolves')
 
@@ -146,7 +237,8 @@ module.exports = (io) => {
             data: data
         })
         .then((res) => {
-            socket.emit('ConfirmKillRespond', res.data)
+            if(res.data === "all werewolves voted")
+                wwIO.in(data.roomid).emit('ConfirmKillRespond', res.data)
         })
         .catch(err => {
             console.log(err)
@@ -177,6 +269,29 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
+    const RequestFalseRoleChoice = (data) => {
+        axios({
+            method: 'post',
+            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/werewolves-set-false-role',
+            data: data
+        })
+        .then(res => {
+            wwIO.in(data.roomid).emit('FalseRoleChoice', res.data)
+        })
+        .catch(err => console.log(err))
+    }
+
+    const RequestToGetOtherFalseRoles = (roomid, socket) => {
+        axios({
+            method: 'get',
+            url: 'http://localhost:3001/in-game/actions/' + roomid + '/werewolves-get-other-false-role'
+        })
+        .then(res => {
+            socket.emit('OtherFalseRoles', res.data)
+        })
+        .catch(err => console.log(err))
+    }
+
     wwIO.on('connect', (socket) => {
         socket.on('JoinRoom', roomid => {
             socket.join(roomid)
@@ -199,7 +314,15 @@ module.exports = (io) => {
         })
 
         socket.on('RequestFalseRoleChoice', data => {
-            wwIO.in(data.roomid).emit('FalseRoleChoice', data)
+            RequestFalseRoleChoice(data)
+        })
+
+        socket.on('RequestToNotifyOther', data => {
+            wwIO.in(data.roomid).emit('OtherNotified', data)
+        })
+
+        socket.on('RequestToGetOtherFalseRoles', roomid => {
+            RequestToGetOtherFalseRoles(roomid, socket)
         })
     })
 
