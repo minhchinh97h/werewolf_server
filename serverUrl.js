@@ -17,6 +17,6 @@ function normalizePort(val) {
 }
 
 // const serverUrl = "http://localhost:" + port + '/'
-const serverUrl = "https://werewolves-of-millers-hollow.herokuapp.com/" + port + "/"
+const serverUrl = "https://werewolves-of-millers-hollow.herokuapp.com/"
 
 module.exports = serverUrl
