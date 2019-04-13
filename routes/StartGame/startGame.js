@@ -30,6 +30,7 @@ router.get('/:roomid', (req, res, next) => {
                 let callingOrder = new callingOrderConstructor().GetCallingOrder(),
                     players = result.players,
                     unusedRoles = result.unusedRoles
+
                 
                 let playerRoles = []
                 
@@ -162,30 +163,11 @@ router.get('/:roomid', (req, res, next) => {
                 //Arrange calling order
                 let arrangedOrder = []
 
-                callingOrder.forEach((order, index) => {
+                callingOrder.forEach((order, index, arr) => {
                     playerRoles.forEach((player, playerIndex) => {
                         
                         if(order.name === player.role){
-                            // if(player.role !== 'Witch'){
-                            //     arrangedOrder[index]({
-                            //         'name': player.name,
-                            //         'role': player.role,
-                            //         'index': index,
-                            //         '1stNight': order['1stNight']
-                            //     })
-                            // }
-                            
-                            // else{
-                            //     arrangedOrder[index]({
-                            //         'name': player.name,
-                            //         'role': player.role,
-                            //         'index': index,
-                            //         '1stNight': order['1stNight'],
-                            //         'useHeal': order.useHeal,
-                            //         'useKill': order.useKill
-                            //     })
-                            // }
-                            callingOrder[index].player.push(player.name)
+                            arr[index].player.push(player.name)
                         }
                     })
                 })
@@ -199,48 +181,46 @@ router.get('/:roomid', (req, res, next) => {
                 var newCallingOrder = []
 
                 callingOrder.forEach((order, i) => {
-                    if(order.special || order.player.length > 0){
+                    if((result.currentRoles.hasOwnProperty(order.name) && result.currentRoles[order.name] > 0) || order.special)
                         newCallingOrder.push(order)
-                    }
                 })  
 
-                //Get other unused roles from currentRoles
+                //Get other unused roles from currentRoles and delete them from newCallingOrder
+                let numberOfOrdinaryTownsfolkPlayers
 
-                //get the names of total picked roles
-                let currentRoles_arr = []
-                for(var key in result.currentRoles){
-                    if(result.currentRoles.hasOwnProperty(key)){
-                        if(result.currentRoles[key] > 0){
-                            currentRoles_arr.push(key)
-                        }
+                newCallingOrder.forEach((order, index, arr) => {
+                    if(!order.special && order.player instanceof Array && order.player.length === 0){
+                        unusedRoles.push(order)
+                        arr.splice(index, arr)
                     }
-                }
 
-                currentRoles_arr.forEach((currentRole) => {
-                    let found = true
-                    newCallingOrder.every((newOrder, index, arr) => {
-                        if(newOrder.name === currentRole){
-                            found = true
-                            return false
-                        }
-
-                        else{
-                            found = false
-                            return true
-                        }
-                    })
-
-                    if(!found){
-                        callingOrder.every((order) => {
-                            if(order.name === currentRole){
-                                unusedRoles.push(order)
-                                return false
-                            }
-                            return true
-                        })
+                    if(order.name === "Ordinary Townsfolk"){
+                        numberOfOrdinaryTownsfolkPlayers = order.player.length
                     }
                 })
 
+                //In case the number of Ordinary Townsfolk is spare, we need to add them to unusedRoles
+                if(result.currentRoles["Ordinary Townsfolk"] > numberOfOrdinaryTownsfolkPlayers){
+                    let spareNumber = result.currentRoles["Ordinary Townsfolk"] - numberOfOrdinaryTownsfolkPlayers
+
+                    //If unusedRoles already has one Ordinary Townsfolk field, then decrease spareNumber by 1
+                    unusedRoles.every((role) => {
+                        if(role.name === "Ordinary Townsfolk"){
+                            spareNumber -= 1
+                            return false
+                        }
+                        return true
+                    })
+
+                    for(var i = 0; i < spareNumber; i++){
+                        unusedRoles.push({
+                            'name': 'Ordinary Townsfolk',
+                            'when': 18,
+                            'player': [],
+                            '1stNight': true
+                        })
+                    }
+                }
 
                 //get the players that are werewolves
                 let werewolfPlayers = newCallingOrder.map((order) => {

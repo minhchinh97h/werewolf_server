@@ -23,7 +23,7 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
     db.once('open', () => {
 
         //to update the current player's data row in Players collection
-        Player.updateOne({username: req.body.admin}, {$set: {roomid: req.body.roomid}}, (err, result) => {
+        Player.updateOne({username: req.body.admin, 'roomid': req.params.roomid}, {$set: {roomid: req.body.roomid}}, (err, result) => {
             if(err) console.log(err)
 
             //return if does not find the valid username

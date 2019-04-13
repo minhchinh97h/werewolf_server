@@ -22,25 +22,23 @@ router.get('/:roomid/savior-get-last-protected', (req, res, next) => {
 
     db.once('open', () => {
         //Get the last protected player
-        var checkRoomProtect = new Promise((resolve, reject) => {
-            Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
-                if(err) return console.log(err)
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
 
-                if(result !== null){
-                    let callingOrder = result.callingOrder,
-                        lastProtectedPlayer = ''
-                    
-                    callingOrder.every((order, index, arr) => {
-                        if(order.name === "Savior protect target"){
-                            lastProtectedPlayer = order.player
-                            return false
-                        }
-                        return true
-                    })
+            if(result !== null){
+                let callingOrder = result.callingOrder,
+                    lastProtectedPlayer = ''
+                
+                callingOrder.every((order, index, arr) => {
+                    if(order.name === "Savior protect target"){
+                        lastProtectedPlayer = order.player
+                        return false
+                    }
+                    return true
+                })
 
-                    res.send(lastProtectedPlayer)
-                }
-            })
+                res.send(lastProtectedPlayer)
+            }
         })
     })
 })
@@ -72,7 +70,7 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
         //Update Players collection's status
         var updatePlayerProtect = new Promise((resolve, reject) => {
             //only protect the player with status.dead > 0 and killed by werewolves
-            Player.findOne({'username': req.body.protectTarget}, {'status': 1, '_id': 0, 'killedByWerewolves': 1},  (err, result) => {
+            Player.findOne({'username': req.body.protectTarget, 'roomid': req.params.roomid}, {'status': 1, '_id': 0, 'killedByWerewolves': 1},  (err, result) => {
                 if(err) return reject(err)
 
                 if(result !== null){
@@ -85,7 +83,7 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
                     }
 
                     //Proceed salvation for the chosen player
-                    Player.updateOne({'username': req.body.protectTarget}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
+                    Player.updateOne({'username': req.body.protectTarget, 'roomid': req.params.roomid}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
                         if(err) return reject (err)
 
                         if(result !== null){
@@ -114,7 +112,7 @@ router.post('/:roomid/savior-protect', (req, res, next) => {
 
                                     //If there is a lover that is connected to the protected player then proceed salvation
                                     if(lover.length > 0){
-                                        Player.findOneAndUpdate({'username': lover, 'status.dead': {$gt: 0}}, {$inc : {'status.dead': -1}}, (err, result) => {
+                                        Player.findOneAndUpdate({'roomid': req.params.roomid, 'username': lover, 'status.dead': {$gt: 0}}, {$inc : {'status.dead': -1}}, (err, result) => {
                                             if(err) return reject(err)
 
                                             if(result !== null){

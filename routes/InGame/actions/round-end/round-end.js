@@ -355,7 +355,7 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                             //of werewolves is half or more half of the total players
                             else{
                                 callingOrder.every((order, index, arr) => {
-                                    if(order.name === "Werewolves" && order.player instanceof Array && order.player.length >= (Math.ceil(totalPlayers.length/2))){
+                                    if(order.name === "Werewolves" && order.player instanceof Array && order.player.length >= (Math.ceil(players.length/2))){
                                         werewolvesWon = true
                                         return false
                                     }
@@ -374,7 +374,7 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                             if(order.player instanceof Array && order.player > 0){
                                                 //If he does then proceed checking
                                                 callingOrder.every((order, index, arr) => {
-                                                    if(order.name === "The hypnotized" && order.player instanceof Array && order.player.length === (players.length-1)){
+                                                    if(order.name === "The hypnotized" && order.player instanceof Array && order.player.length === (totalPlayers.length-1)){
                                                         piperWon = true
                                                         return false
                                                     }

@@ -37,16 +37,6 @@ router.get('/:roomid', (req, res, next) => {
 module.exports = (io) => {
     io.of('/main-page').setMaxListeners(Infinity)
 
-    // let roomid
-
-    // io.of('/main-page').use((socket, next) => {
-    //     roomid = socket.handshake.query.roomid
-    //     if(roomid.length > 0)
-    //         return next()
-        
-    //     return next(new Error('roomid does not found'))
-    // })
-    
     const getPlayers = (roomid, socket) => {
         axios({
             method: 'get',

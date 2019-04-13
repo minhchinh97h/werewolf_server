@@ -193,7 +193,7 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
                             promises.push(
                                 new Promise((resolve, reject) => {
                                     //Update the chosenTarget's status in 'Players' collection
-                                    Player.findOne({'username': player}, {'status': 1, 'killedByWerewolves': 1, '_id': 0}, (err, result) => {
+                                    Player.findOne({'username': player, 'roomid': req.params.roomid}, {'status': 1, 'killedByWerewolves': 1, '_id': 0}, (err, result) => {
                                         if(err) reject(err)
 
                                         if(result !== null){
@@ -205,7 +205,7 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
                                                 killedByWerewolves = true
                                             }
 
-                                            Player.updateOne({'username': player}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
+                                            Player.updateOne({'username': player, 'roomid': req.params.roomid}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
                                                 if(err) reject(err)
 
                                                 if(result !== null){
@@ -220,7 +220,7 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
                             promises.push(
                                 new Promise((resolve, reject) => {
                                     //Update the lover's status in 'Players' collection
-                                    Player.findOne({'username': player}, {'status': 1, 'killedByWerewolves': 1, '_id': 0}, (err, result) => {
+                                    Player.findOne({'username': player, 'roomid': req.params.roomid}, {'status': 1, 'killedByWerewolves': 1, '_id': 0}, (err, result) => {
                                         if(err) reject(err)
 
                                         if(result !== null){
@@ -232,7 +232,7 @@ router.post('/:roomid/werewolves-final-kill', (req, res, next) => {
                                                 killedByWerewolves = false
                                             }
 
-                                            Player.updateOne({'username': player}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
+                                            Player.updateOne({'username': player, 'roomid': req.params.roomid}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
                                                 if(err) reject(err)
 
                                                 if(result !== null){

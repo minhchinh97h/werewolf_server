@@ -108,12 +108,12 @@ router.post('/:roomid/witch-kill', (req, res, next) => {
 
                         if(lovers.length > 0){ //meaning there is a couple
                             //Update the first lover's status
-                            Player.updateOne({'username': lovers[0]}, {$inc: {'status.dead': 1}}, (err, result) => {
+                            Player.updateOne({'username': lovers[0], 'roomid': req.params.roomid}, {$inc: {'status.dead': 1}}, (err, result) => {
                                 if(err) return console.log(err)
 
                                 if(result !== null){
                                     //Update the second lover's status
-                                    Player.updateOne({'username': lovers[1]}, {$inc: {'status.dead': 1}}, (err, result) => {
+                                    Player.updateOne({'username': lovers[1], 'roomid': req.params.roomid}, {$inc: {'status.dead': 1}}, (err, result) => {
                                         if(err) return console.log(err)
 
                                         if(result !== null){
@@ -126,7 +126,7 @@ router.post('/:roomid/witch-kill', (req, res, next) => {
 
                         else{
                             //Update the player's status
-                            Player.updateOne({'username': req.body.target_kill}, {$inc: {'status.dead': 1}}, (err, result) => {
+                            Player.updateOne({'username': req.body.target_kill, 'roomid': req.params.roomid}, {$inc: {'status.dead': 1}}, (err, result) => {
                                 if(err) return console.log(err)
 
                                 if(result !== null){
@@ -216,7 +216,7 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
             if(result === 'Used Heal Potion'){
                 //Only protect the player with dead > 0
                 //Update the player's status in 'Player' collection
-                Player.findOne({'username': req.body.target_protect}, {'status': 1, '_id': 0, 'killedByWerewolves': 1}, (err, result) => {
+                Player.findOne({'username': req.body.target_protect, 'roomid': req.params.roomid}, {'status': 1, '_id': 0, 'killedByWerewolves': 1}, (err, result) => {
                     if(err) return console.log(err)
 
                     if(result !== null){
@@ -229,7 +229,7 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
                         }
 
                         //Proceed healing for chosen player
-                        Player.updateOne({'username': req.body.target_protect}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
+                        Player.updateOne({'username': req.body.target_protect, 'roomid': req.params.roomid}, {$set: {'status': status, 'killedByWerewolves': killedByWerewolves}}, (err, result) => {
                             if(err) return console.log(err)
 
                             if(result !== null){
@@ -259,7 +259,7 @@ router.post('/:roomid/witch-protect', (req, res, next) => {
                                         
                                         //If there is a lover that is connected to the protected player then proceed salvation
                                         if(lover.length > 0){
-                                            Player.findOneAndUpdate({'username': lover, 'status.dead': {$gt: 0}}, {$inc : {'status.dead': -1}, $set: {'killedByWerewolves': false}}, (err, result) => {
+                                            Player.findOneAndUpdate({'roomid': req.params.roomid, 'username': lover, 'status.dead': {$gt: 0}}, {$inc : {'status.dead': -1}, $set: {'killedByWerewolves': false}}, (err, result) => {
                                                 if(err) return reject(err)
 
                                                 if(result !== null){

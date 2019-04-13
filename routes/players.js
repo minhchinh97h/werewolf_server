@@ -20,7 +20,7 @@ router.post('/create/:username', (req, res, next) => {
     db.once('open', () => {
 
         //to verify that the req.body.username does not exist in the players collection
-        Player.findOne({ 'username': req.body.username }, (err, result) => {
+        Player.findOne({ 'username': req.body.username}, (err, result) => {
             if(err) return console.log(err)
 
             //if does not exist, proceed
