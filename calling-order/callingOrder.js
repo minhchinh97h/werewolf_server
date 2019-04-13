@@ -34,7 +34,8 @@ class CallingOrderConstructor {
                 'name': 'The fox',
                 'when': 2,
                 'player': [],
-                '1stNight': false
+                '1stNight': false,
+                'canUseAbility': true
             },
             {
                 'name': 'Cupid',

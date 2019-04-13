@@ -28,7 +28,6 @@ router.post('/:roomid/the-fox-scent', (req, res, next) => {
                             order.player.every((player) => {
                                 if(player === name){
                                     found = true
-                                    res.send(true)
                                 }
 
                                 if(found)
@@ -50,13 +49,51 @@ router.post('/:roomid/the-fox-scent', (req, res, next) => {
                         return true
                 })
 
-                if(!found)  
-                    res.send(false)
+                if(found){
+                    res.send(true)
+                }
+
+                //The fox loses the ability
+                else{
+                    Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder.$[element].canUseAbility': false}}, {arrayFilters: [{'element.name': 'The fox'}]}, (err, result) => {
+                        if(err) return console.log(err)
+
+                        if(result !== null){
+                        res.send(false)
+
+                        }
+                    })
+                }
             }
         })
     })
 })
 
+router.get('/:roomid/the-fox-can-use-ability', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => { 
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                let callingOrder = result.callingOrder
+                
+                callingOrder.every((order) => {
+                    if(order.name === "The fox"){
+                        res.send(order.canUseAbility)
+                        return false
+                    }
+                    return true
+                })
+            }
+        })
+    })
+})
 
 module.exports = (io) => {
     let foxIO = io.of('/the-fox')
@@ -77,12 +114,26 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
+    const GetCanUseAbility = (roomid, socket) => {
+        axios({
+            method: 'get',
+            url: 'http://localhost:3001/in-game/actions/' + roomid + '/the-fox-can-use-ability'
+        })
+        .then(res => {
+            socket.emit('CanUseAbility', res.data)
+        })
+        .catch(err => console.log(err))
+    }
+
     foxIO.on('connect', (socket) => {
 
         socket.on('RequestToScent', data => {
             requestFoxScent(data, socket)
         })
 
+        socket.on('GetCanUseAbility', roomid => {
+            GetCanUseAbility(roomid, socket)
+        })
     })
 
     return router

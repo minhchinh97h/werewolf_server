@@ -149,6 +149,7 @@ module.exports = (io) => {
     // let roomid
     let getAdminIO = io.of('/get-admin')
 
+    io.setMaxListeners(Infinity)
     
     getAdminIO.setMaxListeners(Infinity)
     
@@ -171,14 +172,11 @@ module.exports = (io) => {
             findAdmin(data)
         })
 
-        getAdminIO.on('disconnect', () => {
-            console.log('room user disconnected')
-        })
     })
 
     io.on('connect', socket => {
+
         socket.on('disconnect', () => {
-            console.log("user disconnect")
         })
     })
 
