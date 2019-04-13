@@ -11,7 +11,7 @@ var Room = mongoose.model('Room', roomSchema)
 
 var callingOrderConstructor = require('../../calling-order/callingOrder') //module.export will make the origin changed if it is changed anywhere else across the application
 
-
+var serverUrl = require('../../serverUrl')
 
 router.get('/:roomid', (req, res, next) => {
     
@@ -160,9 +160,6 @@ router.get('/:roomid', (req, res, next) => {
                     }
                 }
 
-                //Arrange calling order
-                let arrangedOrder = []
-
                 callingOrder.forEach((order, index, arr) => {
                     playerRoles.forEach((player, playerIndex) => {
                         
@@ -188,14 +185,18 @@ router.get('/:roomid', (req, res, next) => {
                 //Get other unused roles from currentRoles and delete them from newCallingOrder
                 let numberOfOrdinaryTownsfolkPlayers
 
+                newCallingOrder.every((order) => {
+                    if(order.name === "Ordinary Townsfolk"){
+                        numberOfOrdinaryTownsfolkPlayers = order.player.length
+                        return false
+                    }
+                    return true
+                })
+
                 newCallingOrder.forEach((order, index, arr) => {
                     if(!order.special && order.player instanceof Array && order.player.length === 0){
                         unusedRoles.push(order)
-                        arr.splice(index, arr)
-                    }
-
-                    if(order.name === "Ordinary Townsfolk"){
-                        numberOfOrdinaryTownsfolkPlayers = order.player.length
+                        arr.splice(index, 1)
                     }
                 })
 
@@ -328,7 +329,7 @@ module.exports = (io) => {
     const startGame = (roomid) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/start-game/' + roomid
+            url: serverUrl + 'start-game/' + roomid
         })
         .then(res => {
             let requests = []
@@ -337,7 +338,7 @@ module.exports = (io) => {
                 requests.push(
                     axios({
                         method: 'post',
-                        url: 'http://localhost:3001/players/' + player.name.toString().replace(' ', '-') + '/update-role',
+                        url: serverUrl + 'players/' + player.name.toString().replace(' ', '-') + '/update-role',
                         data: {
                             role: player.role
                         }

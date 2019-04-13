@@ -13,6 +13,8 @@ var playerSchema = require('../../../../mongoose-schema/playerSchema')
 
 var Player = mongoose.model('Player', playerSchema)
 
+var serverUrl = require('../../../../serverUrl')
+
 //Kill target
 router.post('/:roomid/witch-kill', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
@@ -328,7 +330,7 @@ module.exports = (io) => {
     const RequestToKillPlayer = (data, socket) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/witch-kill',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/witch-kill',
             data: data
         })
         .then((res) => {
@@ -340,7 +342,7 @@ module.exports = (io) => {
     const RequestToProtectPlayer = (data, socket) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/witch-protect',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/witch-protect',
             data: data
         })
         .then((res) => {
@@ -352,7 +354,7 @@ module.exports = (io) => {
     const RequestToRetrieveLeftAbilities = (roomid, socket) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + roomid + '/witch-left-abilities'
+            url: serverUrl + 'in-game/actions/' + roomid + '/witch-left-abilities'
         })
         .then(res => {
             socket.emit('LeftAbilities', res.data)

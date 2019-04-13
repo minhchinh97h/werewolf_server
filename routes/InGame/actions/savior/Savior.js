@@ -13,6 +13,8 @@ var Room = mongoose.model('Room', roomSchema)
 
 var Player = mongoose.model('Player', playerSchema)
 
+var serverUrl = require('../../../../serverUrl')
+
 router.get('/:roomid/savior-get-last-protected', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -162,7 +164,7 @@ module.exports = (io) => {
     const RequestToProtectPlayer = (data, socket) => {
         axios({
             method:'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/savior-protect',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/savior-protect',
             data: data
         })
         .then(res => {
@@ -176,7 +178,7 @@ module.exports = (io) => {
     const RequestToGetLastProtectedPlayer = (roomid, socket) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + roomid + '/savior-get-last-protected'
+            url: serverUrl + 'in-game/actions/' + roomid + '/savior-get-last-protected'
         })
         .then(res => {
             socket.emit('LastProtectedPlayer', res.data)

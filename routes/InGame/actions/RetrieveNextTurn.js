@@ -12,6 +12,8 @@ var Room = mongoose.model('Room', roomSchema)
 var playerSchema = require('../../../mongoose-schema/playerSchema')
 var Player = mongoose.model('Player', playerSchema)
 
+var serverUrl = require('../../../serverUrl')
+
 //retrieve next turn
 router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
@@ -28,14 +30,13 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
                 let callingOrder = result.callingOrder
 
                 //Sort out not special roles
-                let notSpecialRole = callingOrder.filter((order) => {return !order.special || order.name === "current called role"})
+                let notSpecialRole = callingOrder.filter((order) => {return !order.special})
                 
                 notSpecialRole.every((order, index) => {
                     if(req.body.role === order.name){
                         if(index < (notSpecialRole.length - 1)){
                             for(let i = index + 1; i < notSpecialRole.length; i++){
 
-                                //Don't get special roles
                                 if(notSpecialRole[i].player.length > 0){
                                     
                                     //Update current called role
@@ -61,9 +62,9 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
                                     break
                                 }
 
-                                else{
-                                    res.send("round ends")
-                                }
+                                // else{
+                                //     res.send("round ends")
+                                // }
                             }
                         }
                         
@@ -286,7 +287,7 @@ module.exports = (io) => {
     const getNextTurn = (data) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-next-turn',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/retrieve-next-turn',
             data: {
                 roomid: data.roomid,
                 role: data.role
@@ -299,7 +300,7 @@ module.exports = (io) => {
             else
                 axios({
                     method: 'get',
-                    url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-round-ends'
+                    url: serverUrl + 'in-game/actions/' + data.roomid + '/retrieve-round-ends'
                 })
                 .then(res => {
                     if(res.data === "Human won"){
@@ -331,7 +332,7 @@ module.exports = (io) => {
     const getWerewolfEndTurn = (data) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/retrieve-next-turn-for-werewolves',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/retrieve-next-turn-for-werewolves',
             data: data
         })
         .then(res => {
@@ -345,7 +346,7 @@ module.exports = (io) => {
     const getFinalKill = (data) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/werewolves-final-kill',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/werewolves-final-kill',
             data: data
         })
         .then(res => {

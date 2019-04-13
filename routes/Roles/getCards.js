@@ -9,6 +9,8 @@ var roleSchema = require('../../mongoose-schema/roleSchema')
 
 var Role = mongoose.model('Role', roleSchema)
 
+var serverUrl = require('../../serverUrl')
+
 router.get('/', (req, res, next) => {
     roomid = req.params.roomid
 
@@ -34,10 +36,10 @@ router.get('/', (req, res, next) => {
 module.exports = (io) => {
     io.of('get-cards').setMaxListeners(Infinity)
     
-    const getCards = async (socket) => {
-        await axios({
+    const getCards = (socket) => {
+        axios({
             method: 'get',
-            url: 'http://localhost:3001/get-roles'
+            url: serverUrl + 'get-roles'
         })
         .then(res => {
             socket.emit('GetCards', res.data)

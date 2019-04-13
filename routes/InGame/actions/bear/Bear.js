@@ -9,6 +9,8 @@ var roomSchema = require('../../../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var serverUrl = require('../../../../serverUrl')
+
 router.post('/:roomid/bear-scent', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -60,7 +62,7 @@ module.exports = (io) => {
     const ScentPlayer = (data, socket) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/bear-scent',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/bear-scent',
             data: {
                 playersToScent: data.playersToScent
             }

@@ -10,7 +10,7 @@ var roomSchema = require('../../../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
-
+var serverUrl = require('../../../../serverUrl')
 
 //If a player pressed Vote button, update the vote to round end item to check whether should proceed end voting when all the players voted
 router.post('/:roomid/request-hang-player', (req, res, next) => {
@@ -500,7 +500,7 @@ module.exports = (io) => {
     const requestToHangPlayer = (data) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-hang-player',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/request-hang-player',
             data: data
         })
         .then(res => {
@@ -508,7 +508,7 @@ module.exports = (io) => {
             if(res.data ===  "all players voted"){
                 axios({
                     method: 'get',
-                    url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-to-get-hang-player',
+                    url: serverUrl + 'in-game/actions/' + data.roomid + '/request-to-get-hang-player',
                 })
                 .then(res => {
                     //Returning an array of dead players
@@ -522,7 +522,7 @@ module.exports = (io) => {
     const RequestToEndRound = (data) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/request-to-end-round',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/request-to-end-round',
             data: data
         })
         .then(res => {

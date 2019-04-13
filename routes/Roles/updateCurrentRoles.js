@@ -9,6 +9,8 @@ var roomSchema = require('../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var serverUrl = require('../../serverUrl')
+
 router.post('/:roomid', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -56,7 +58,7 @@ module.exports = (io) => {
     const updateCurrentRoles = async (data) => {
         await axios({
             method: 'post',
-            url: 'http://localhost:3001/update-current-roles/' + data.roomid,
+            url: serverUrl + 'update-current-roles/' + data.roomid,
             data: {
                 currentRoles: data.currentRoles
             }
@@ -72,7 +74,7 @@ module.exports = (io) => {
     const getCurrentRoles = async (roomid) => {
         await axios({
             method: 'get',
-            url: 'http://localhost:3001/update-current-roles/' + roomid
+            url: serverUrl + 'update-current-roles/' + roomid
         })
         .then(res => {
             getCurrentRolesIO.in(roomid).emit('GetSelectedCards', res.data)

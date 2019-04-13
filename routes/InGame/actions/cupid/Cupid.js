@@ -9,6 +9,8 @@ var roomSchema = require('../../../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var serverUrl = require('../../../../serverUrl')
+
 router.post('/:roomid/cupid-connect', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -123,7 +125,7 @@ module.exports = (io) => {
     const requestConnect = (data, socket) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/cupid-connect',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/cupid-connect',
             data: {
                 playersToConnect: data.playersToConnect
             }
@@ -139,7 +141,7 @@ module.exports = (io) => {
     const RequestToGetCupidAbility = (roomid, socket) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + roomid + '/cupid-can-use-ability'
+            url: serverUrl + 'in-game/actions/' + roomid + '/cupid-can-use-ability'
         })
         .then(res => {
             socket.emit('CanUseAbility', res.data)

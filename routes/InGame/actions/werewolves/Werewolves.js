@@ -9,6 +9,8 @@ var roomSchema = require('../../../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var serverUrl = require('../../../../serverUrl')
+
 //Push chosen target of each werewolve in to the database
 router.post('/:roomid/werewolves-agree', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
@@ -233,7 +235,7 @@ module.exports = (io) => {
     const RequestToAgree = (data, socket) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/werewolves-agree',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/werewolves-agree',
             data: data
         })
         .then((res) => {
@@ -248,7 +250,7 @@ module.exports = (io) => {
     const GetOtherWerewolves = (roomid, socket) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + roomid + '/werewolves-get'
+            url: serverUrl + 'in-game/actions/' + roomid + '/werewolves-get'
         })
         .then((res) => {
             socket.emit('GetOtherWerewolves', res.data)
@@ -261,7 +263,7 @@ module.exports = (io) => {
     const GetFalseRoles = (data, socket) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/werewolves-get-false-roles'
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/werewolves-get-false-roles'
         })
         .then(res => {
             socket.emit("FalseRoles", res.data)
@@ -272,7 +274,7 @@ module.exports = (io) => {
     const RequestFalseRoleChoice = (data) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/werewolves-set-false-role',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/werewolves-set-false-role',
             data: data
         })
         .then(res => {
@@ -284,7 +286,7 @@ module.exports = (io) => {
     const RequestToGetOtherFalseRoles = (roomid, socket) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + roomid + '/werewolves-get-other-false-role'
+            url: serverUrl + 'in-game/actions/' + roomid + '/werewolves-get-other-false-role'
         })
         .then(res => {
             socket.emit('OtherFalseRoles', res.data)

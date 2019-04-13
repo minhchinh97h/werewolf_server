@@ -11,6 +11,8 @@ var roomSchema = require('../mongoose-schema/roomSchema')
 var Player = mongoose.model('Player', playerSchema)
 var Room = mongoose.model('Room', roomSchema)
 
+var serverUrl = require('../serverUrl')
+
 //get admin of the room
 router.get('/:roomid/get-admin', (req, res, next) => {
 
@@ -164,7 +166,7 @@ module.exports = (io) => {
     const findAdmin = async (roomid, socket) => {
         await axios({
             method: 'get',
-            url: 'http://localhost:3001/rooms/' + roomid + '/get-admin'
+            url: serverUrl + 'rooms/' + roomid + '/get-admin'
         })
         .then(res => {
             getAdminIO.in(roomid).emit('GetAdmin', res.data)

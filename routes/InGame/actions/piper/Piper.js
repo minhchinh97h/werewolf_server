@@ -9,6 +9,8 @@ var roomSchema = require('../../../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var serverUrl = require('../../../../serverUrl')
+
 //Update the calling order
 router.post('/:roomid/piper-charm', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
@@ -87,7 +89,7 @@ module.exports = (io) => {
     const requestToCharm = (data, socket) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/piper-charm',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/piper-charm',
             data: {
                 playersToCharm : data.playersToCharm
             }
@@ -97,7 +99,7 @@ module.exports = (io) => {
 
             return axios({
                 method: 'get',
-                url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/piper-charm'
+                url: serverUrl + 'in-game/actions/' + data.roomid + '/piper-charm'
             })
         })
         .then((res) => {

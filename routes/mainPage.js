@@ -8,6 +8,8 @@ const mongoose = require('mongoose')
 var roomSchema = require('../mongoose-schema/roomSchema')
 var Room = mongoose.model('Room', roomSchema)
 
+var serverUrl = require('../serverUrl')
+
 //return players field for MainPage component
 router.get('/:roomid', (req, res, next) => {
     
@@ -40,7 +42,7 @@ module.exports = (io) => {
     const getPlayers = (roomid, socket) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/main-page/' + roomid
+            url: serverUrl + 'main-page/' + roomid
         })
         .then(res => {
             socket.emit('GetPlayers', res.data)
@@ -51,7 +53,7 @@ module.exports = (io) => {
     const broadCastPlayers = (roomid) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/main-page/' + roomid
+            url: serverUrl + 'main-page/' + roomid
         })
         .then(res => {
             io.of('/main-page').in(roomid).emit('GetBroadCastPlayers', res.data)
@@ -62,14 +64,14 @@ module.exports = (io) => {
     const PlayerExit = (data) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/close',
+            url: serverUrl + 'close',
             data: data
         })
         .then(res => {
             if(res.data === "ok"){
                 axios({
                     method: 'get',
-                    url: 'http://localhost:3001/main-page/' + data.roomid
+                    url: serverUrl + 'main-page/' + data.roomid
                 })
                 .then(res => {
                     io.of('/main-page').in(data.roomid).emit('GetPlayers', res.data)

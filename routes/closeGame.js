@@ -12,6 +12,8 @@ var Room = mongoose.model('Room', roomSchema)
 var playerSchema = require('../mongoose-schema/playerSchema')
 var Player = mongoose.model('Player', playerSchema)
 
+var serverUrl = require('../serverUrl')
+
 //Handle when player exits the page (refreshing/closing/etc)
 router.post('/', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })

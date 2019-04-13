@@ -9,6 +9,12 @@ var roomSchema = require('../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var playerSchema = require('../../mongoose-schema/playerSchema')
+
+var Player = mongoose.model('Player', playerSchema)
+
+var serverUrl = require('../../serverUrl')
+
 router.get('/:roomid/get-game-info', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -70,15 +76,47 @@ router.get('/:roomid/retrieve-first-turn', (req, res, next) => {
 
 })
 
+router.post('/:roomid/player-close-game', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => { 
+        Player.deleteOne({'username': req.body.username, 'roomid': req.params.roomid}, (err, result) => {
+            if(err) return console.log(err)
+
+            Room.findOneAndUpdate({'roomid': req.params.roomid}, {$pull: {'totalPlayers': req.body.username}}, (err, result) => {
+                if(err) return console.log(err)
+
+                if(result !== null){
+                    let totalPlayers = result.totalPlayers
+
+                    if(totalPlayers instanceof Array && totalPlayers.length === 0){
+                        Room.deleteOne({'roomid': req.params.roomid}, (err, result) => {
+                            res.send('ok')
+                        })
+                    }
+
+                    else
+                        res.send('ok')
+                }
+            })
+        })
+    })
+})
+
+
 module.exports = (io) => {
     let inGameIO = io.of('/in-game')
 
     inGameIO.setMaxListeners(Infinity)
 
-    const getGameInfo = async (roomid, socket) => {
-        await axios({
+    const getGameInfo = (roomid, socket) => {
+        axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/' + roomid + '/get-game-info'
+            url: serverUrl + 'in-game/' + roomid + '/get-game-info'
         })
         .then(res => {
             socket.emit('RetrieveGameInfo', res.data)
@@ -88,7 +126,7 @@ module.exports = (io) => {
     const getTheFirstTurn = (roomid) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/' + roomid + '/retrieve-first-turn'
+            url: serverUrl + 'in-game/' + roomid + '/retrieve-first-turn'
         })
         .then(res => {
             inGameIO.in(roomid).emit('Retrieve1stTurn', res.data)
@@ -99,7 +137,7 @@ module.exports = (io) => {
     const getAllHypnotized = (roomid, socket) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + roomid + '/piper-charm'
+            url: serverUrl + 'in-game/actions/' + roomid + '/piper-charm'
         })
         .then((res => {
             inGameIO.in(roomid).emit('GetListOfCharmed', res.data)
@@ -109,6 +147,18 @@ module.exports = (io) => {
         })
     }
     
+    const RequestToCloseGame = (data, socket) => {
+        axios({
+            method: 'post',
+            url: serverUrl + 'in-game/' + data.roomid + '/player-close-game',
+            data: data
+        })
+        .then(res => {
+            socket.emit('PlayerCloseGame', res.data)
+        })
+        .catch(err => console.log(err))
+    }
+
     inGameIO.on('connect', socket => {
         socket.on('GetGameInfo', data => {
             getGameInfo(data, socket)   
@@ -128,6 +178,10 @@ module.exports = (io) => {
 
         socket.on("RequestToRetrieveCharmPlayers", data => {
             getAllHypnotized(data, socket)
+        })
+
+        socket.on('RequestToCloseGame', data => {
+            RequestToCloseGame(data, socket)
         })
     })
 

@@ -9,6 +9,8 @@ var roomSchema = require('../../../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var serverUrl = require('../../../../serverUrl')
+
 router.post('/:roomid/the-fox-scent', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -103,7 +105,7 @@ module.exports = (io) => {
     const requestFoxScent = (data, socket) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/the-fox-scent',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/the-fox-scent',
             data: {
                 players: data.players
             }
@@ -117,7 +119,7 @@ module.exports = (io) => {
     const GetCanUseAbility = (roomid, socket) => {
         axios({
             method: 'get',
-            url: 'http://localhost:3001/in-game/actions/' + roomid + '/the-fox-can-use-ability'
+            url: serverUrl + 'in-game/actions/' + roomid + '/the-fox-can-use-ability'
         })
         .then(res => {
             socket.emit('CanUseAbility', res.data)

@@ -53,8 +53,8 @@ module.exports = (io) => {
 
     updateRolesLimitIO.setMaxListeners(Infinity)
     
-    const updateRolesLimit = async (data) => {
-        await axios({
+    const updateRolesLimit = (data) => {
+        axios({
             method: 'post',
             url: 'http://localhost:3001/update-roles-limit/' + data.roomid,
             data: {

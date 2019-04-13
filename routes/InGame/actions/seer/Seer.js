@@ -9,6 +9,7 @@ var roomSchema = require('../../../../mongoose-schema/roomSchema')
 
 var Room = mongoose.model('Room', roomSchema)
 
+var serverUrl = require('../../../../serverUrl')
 
 router.post('/:roomid/seer-reveal', (req, res, next) => {
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
@@ -54,7 +55,7 @@ module.exports = (io) => {
     const revealPlayerRole = (data, socket) => {
         axios({
             method: 'post',
-            url: 'http://localhost:3001/in-game/actions/' + data.roomid + '/seer-reveal',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/seer-reveal',
             data: {
                 player: data.player
             }
