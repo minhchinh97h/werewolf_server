@@ -11,8 +11,8 @@ var roomSchema = require('../mongoose-schema/roomSchema')
 var Player = mongoose.model('Player', playerSchema)
 var Room = mongoose.model('Room', roomSchema)
 
-//create or update if newRoomBttn clicked
-router.post('/create-or-update/:roomid', (req, res, next) => {
+//get admin of the room
+router.get('/:roomid/get-admin', (req, res, next) => {
 
     mongoose.connect(mongoUrl, { useNewUrlParser: true })
 
@@ -21,30 +21,119 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
     db.on('error', console.error.bind(console, 'connection error: '))
 
     db.once('open', () => {
-
-        //to update the current player's data row in Players collection
-        Player.updateOne({username: req.body.admin, 'roomid': req.params.roomid}, {$set: {roomid: req.body.roomid}}, (err, result) => {
+        //send back the admin of the current room id
+        Room.findOne({roomid: req.params.roomid}, {'numberOfPlayers': 1, 'admin': 1, '_id': 0}, (err, result) => {
             if(err) console.log(err)
 
-            //return if does not find the valid username
-            if(result === null){
-                res.send("cannot find player")
-            }
+            if(result !== null)
+                res.send(result)
+            else
+                res.send('not ok')
 
-            //proceed if finds
+        })
+    })
+})
+
+
+router.post('/:roomid/get-room-check-username', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        Room.findOne({'roomid': req.params.roomid}, {'players': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                let players = result.players
+
+                if(players instanceof Array && players.includes(req.body.username)){
+                    res.send('username exists')
+                }
+
+                else{
+                    //Create new player document in players collection and update in Rooms collection
+                    let player = new Player({
+                        username: req.body.username,
+                        roomid: req.body.roomid,
+                        timeCreated: Date.now(),
+                        status: {
+                            alive: 1,
+                            dead: 0,
+                            silence: 0,
+                            connected: "",
+                            hypnotized: 0,
+                            changed: 0
+                        },
+                        killedByWerewolves: 'false',
+                        role: ''
+                    })
+
+                    player.save((err, result) => {
+                        if(err) return console.log(err)
+
+                        if(result !== null){
+                            Room.findOneAndUpdate({'roomid': req.params.roomid}, {$push: {'players': req.body.username}}, (err, result) => {
+                                if(err) return console.log(err)
+
+                                if(result !== null){
+                                    res.send('ok')
+                                }
+                            })
+                        }
+
+                    })
+                }
+            }
+            
             else{
+                res.send('roomid doesnt exist')
+            }
+        })
+    })
+})
+
+router.post('/:roomid/create-player-and-room', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        let player = new Player({
+            username: req.body.username,
+            roomid: req.body.roomid,
+            timeCreated: Date.now(),
+            status: {
+                alive: 1,
+                dead: 0,
+                silence: 0,
+                connected: "",
+                hypnotized: 0,
+                changed: 0
+            },
+            killedByWerewolves: 'false',
+            role: ''
+        })
+
+        player.save((err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
                 //update or create a row if it doesnt exist
-                Room.updateOne({admin: req.body.admin}, { $set: {
-                                                                'roomid': req.body.roomid, 
-                                                                'admin': req.body.admin, 
-                                                                'timeCreated': req.body.timeCreated,
-                                                                'numberOfPlayers': req.body.numberOfPlayers,
-                                                                'players': [req.body.players],
-                                                                'totalPlayers': [req.body.players],
-                                                                'status': req.body.status,
-                                                                'currentRoles': req.body.currentRoles,
-                                                                'unusedRoles': [],
-                                                                'recommendedRoles': req.body.recommendedRoles
+                Room.updateOne({admin: req.body.username}, { $set: {
+                                                            'roomid': req.body.roomid, 
+                                                            'admin': req.body.username, 
+                                                            'timeCreated': Date.now(),
+                                                            'numberOfPlayers': 1,
+                                                            'players': [req.body.username],
+                                                            'totalPlayers': [req.body.username],
+                                                            'status': 'open',
+                                                            'currentRoles': req.body.currentRoles,
+                                                            'unusedRoles': []
 
                 }}, {upsert: true}, (err, result) => {
                     if(err) console.log(err)
@@ -58,88 +147,6 @@ router.post('/create-or-update/:roomid', (req, res, next) => {
                     }
                 })
             }
-        })
-    })
-})
-
-
-//response 
-router.get('/:roomid', (req, res, next) => {
-
-    mongoose.connect(mongoUrl, { useNewUrlParser: true })
-
-    var db = mongoose.connection
-
-    db.on('error', console.error.bind(console, 'connection error: '))
-
-    db.once('open', () => {
-        //to verify that the req.params.roomid exists both in Rooms collection and db as a collection
-        Room.findOne({'roomid': req.params.roomid}, (err, result) => {
-            if(err) return console.log(err)
-
-            if(result !== null){
-                res.send("ok")
-            }
-
-            else
-                res.send("not found")
-
-        })
-    })
-} )
-
-
-//update the related roomid if joinBttn clicked
-router.post('/:roomid/update', (req, res, next) => {
-
-    mongoose.connect(mongoUrl, { useNewUrlParser: true })
-
-    var db = mongoose.connection
-
-    db.on('error', console.error.bind(console, 'connection error: '))
-
-    db.once('open', () => {
-        var username = req.body.username
-
-        //increase the numberOfPlayers field and push the new username into players field
-        Room.updateOne({'roomid': req.body.roomid}, { $inc: { 'numberOfPlayers': 1 },  $push: {'players': username, 'totalPlayers': username} } , (err, result) => {
-            if(err) return console.log(err)
-
-            if(result !== null){
-
-                res.send("ok")
-            }  
-
-            else{
-                res.send("not ok")
-            }
-
-        })
-    })
-})
-
-var roomid
-
-//get admin of the room
-router.get('/:roomid/get-admin', (req, res, next) => {
-    roomid = req.params.roomid
-
-    mongoose.connect(mongoUrl, { useNewUrlParser: true })
-
-    var db = mongoose.connection
-
-    db.on('error', console.error.bind(console, 'connection error: '))
-
-    db.once('open', () => {
-        //send back the admin of the current room id
-        Room.findOne({roomid: roomid}, {'numberOfPlayers': 1, 'admin': 1, '_id': 0}, (err, result) => {
-            if(err) console.log(err)
-
-            if(result !== null)
-                res.send(result)
-            else
-                res.send('not ok')
-
         })
     })
 })
