@@ -227,6 +227,101 @@ router.get('/:roomid/werewolves-get-other-false-role', (req, res, next) => {
     })
 })
 
+
+router.post('/:roomid/werewolves-store-my-choice', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        Room.findOneAndUpdate({'roomid': req.params.roomid}, 
+                                {$set: {[`callingOrder.$[element].werewolvesTargetObject.${req.body.wolfName}`] : req.body.choseTarget}},
+                                {arrayFilters: [{'element.name': 'Werewolves vote target'}]}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                res.send('ok')
+            }
+        })
+    })
+})
+
+router.get('/:roomid/werewolves-get-other-choice', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                let callingOrder = result.callingOrder
+
+                callingOrder.every((order) => {
+                    if(order.name === "Werewolves vote target"){
+                        res.send(order.werewolvesTargetObject)
+                        return false
+                    }
+                    return true
+                })
+            }
+        })
+    })
+})
+
+
+router.post('/:roomid/werewolves-store-my-kill', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => {
+        Room.findOneAndUpdate({'roomid': req.params.roomid}, 
+                                {$set: {[`callingOrder.$[element].agreeOnKillObject.${req.body.werewolf}`] : req.body.choseTarget}},
+                                {arrayFilters: [{'element.name': 'Werewolves agree on kill'}]}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                res.send('ok')
+            }
+        })
+    })
+})
+
+router.get('/:roomid/werewolves-get-other-kill-decisions', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => { 
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                let callingOrder = result.callingOrder
+
+                callingOrder.every((order) => {
+                    if(order.name === "Werewolves agree on kill"){
+                        res.send(order.agreeOnKillObject)
+                        return false
+                    }
+
+                    return true
+                })
+            }
+        })
+    })
+})
+
 module.exports = (io) => {
     let wwIO = io.of('/werewolves')
 
@@ -294,6 +389,55 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
+    const RequestToStoreMyChoice = (data) => {
+        axios({
+            method: 'post',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/werewolves-store-my-choice',
+            data: data
+        })
+        .then(res => {
+            if(res.data === "ok"){
+                wwIO.in(data.roomid).emit('OtherChoices', data)
+            }
+        })
+        .catch(err => console.log(err))
+    }
+
+    const RequestToGetOtherChoices = (roomid, socket) => {
+        axios({
+            method: 'get',
+            url: serverUrl + 'in-game/actions/' + roomid + '/werewolves-get-other-choice'
+        })
+        .then(res => {
+            socket.emit('GetOtherChoices', res.data)
+        })
+        .catch(err => console.log(err))
+    }
+
+    const RequestToNotifyOther = (data) => {
+        axios({
+            method: 'post',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/werewolves-store-my-kill',
+            data: data
+        })
+        .then(res => {
+            if(res.data === 'ok')
+                wwIO.in(data.roomid).emit('OtherNotified', data)
+        })
+        .catch(err => console.log(err))
+    }
+
+    const RequestToGetOtherKillDecisions = (roomid, socket) => {
+        axios({
+            method: 'get',
+            url: serverUrl + 'in-game/actions/' + roomid + '/werewolves-get-other-kill-decisions'
+        })
+        .then(res => {
+            socket.emit('OtherKillDecisions', res.data)
+        })
+        .catch(err => console.log(err))
+    }
+
     wwIO.on('connect', (socket) => {
         socket.on('JoinRoom', roomid => {
             socket.join(roomid)
@@ -303,8 +447,12 @@ module.exports = (io) => {
             GetOtherWerewolves(data, socket)
         })
 
+        socket.on('RequestToGetOtherChoices', roomid => {
+            RequestToGetOtherChoices(roomid, socket)
+        })
+
         socket.on('RequestMyChoice', data => {
-            wwIO.in(data.roomid).emit('OtherChoices', data)
+            RequestToStoreMyChoice(data)
         })
 
         socket.on('RequestToAgreeKill', data => {
@@ -319,8 +467,12 @@ module.exports = (io) => {
             RequestFalseRoleChoice(data)
         })
 
+        socket.on('RequestToGetOtherKillDecisions', roomid => {
+            RequestToGetOtherKillDecisions(roomid, socket)
+        })
+
         socket.on('RequestToNotifyOther', data => {
-            wwIO.in(data.roomid).emit('OtherNotified', data)
+            RequestToNotifyOther(data)
         })
 
         socket.on('RequestToGetOtherFalseRoles', roomid => {

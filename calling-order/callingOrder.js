@@ -63,6 +63,16 @@ class CallingOrderConstructor {
                 'receiveEndVoteObject': {}
             },
             {
+                'name': 'Werewolves vote target',
+                'special': true,
+                'werewolvesTargetObject': {}
+            },
+            {
+                'name': 'Werewolves agree on kill',
+                'special': true,
+                'agreeOnKillObject': {}
+            },
+            {
                 'name': 'Werewolves end turn',
                 'special': true,
                 'receiveEndTurnObject': {}
