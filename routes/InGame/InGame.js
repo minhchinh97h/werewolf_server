@@ -167,11 +167,8 @@ module.exports = (io) => {
         })
 
         socket.on('RequestToStartTheGame1stRound', (data) => {
-            inGameIO.emit('RetrieveGameStart1stRound', 'ok')
-        })
-
-        socket.on('RequestToGet1stTurn', data => {
             getTheFirstTurn(data)
+
         })
 
         socket.on("RequestToRetrieveCharmPlayers", data => {
