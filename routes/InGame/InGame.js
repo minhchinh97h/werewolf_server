@@ -138,7 +138,7 @@ module.exports = (io) => {
             url: serverUrl + 'in-game/actions/' + roomid + '/piper-charm'
         })
         .then((res => {
-            inGameIO.in(roomid).emit('GetListOfCharmed', res.data)
+            socket.emit('GetListOfCharmed', res.data)
         }))
         .catch((err) => {
             console.log(err)
