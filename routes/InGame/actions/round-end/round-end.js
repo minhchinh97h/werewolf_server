@@ -423,7 +423,7 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                                 }
 
                                                 else if(order.name = "round end kill decisions"){
-                                                    order.killDecisionsObject = {}
+                                                    arr[index].killDecisionsObject = {}
                                                 }
 
                                                 else if(order.name === "round end target"){
