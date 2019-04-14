@@ -255,15 +255,19 @@ router.get('/:roomid', (req, res, next) => {
                     })
                 })
 
-                //Update newCallingOrder with werewolves end turn's receiveEndTurnObject and werewolves end vote's receiveEndVoteObject
+                //Update newCallingOrder with werewolves's relevant fields
                 let receiveEndTurnObject = {},
                     receiveEndVoteObject = {}
+                    // werewolvesTargetObject = {},
+                    // agreeOnKillObject = {}
 
                 newCallingOrder.forEach((order) => {
                     if(order.name === "Werewolves"){
                         order.player.forEach((player) => {
                             receiveEndTurnObject[player] = false
                             receiveEndVoteObject[player] = false
+                            // werewolvesTargetObject[player] = ''
+                            // agreeOnKillObject[player] = ''
                         })
                         return false
                     }
@@ -278,6 +282,12 @@ router.get('/:roomid', (req, res, next) => {
                     if(order.name === "Werewolves end turn"){
                         arr[index].receiveEndTurnObject = receiveEndTurnObject
                     }
+                    // if(order.name === "Werewolves vote target"){
+                    //     arr[index].werewolvesTargetObject = werewolvesTargetObject
+                    // }
+                    // if(order.name === "Werewolves agree on kill"){
+                    //     arr[index].agreeOnKillObject = agreeOnKillObject
+                    // }
                 })
 
                 //Don't add Ordinary Townsfolk role
@@ -303,23 +313,6 @@ router.get('/:roomid', (req, res, next) => {
         })
     })
 })
-
-function checkIfEquals(chosenIndex, currentIndex, compareIndex, numberOfPlayersIndex){
-    
-    //base case
-    if(compareIndex < 0)
-        return
-
-    //if current index is not equal to the compare index, then keep comparing to the lower index
-    if(chosenIndex[currentIndex] !== chosenIndex[compareIndex]){
-        checkIfEquals(chosenIndex, currentIndex, compareIndex -1, numberOfPlayersIndex)
-    }
-    //if current index is equal to the compare index, then re-calculating from the currentIndex point and compare again
-    else{
-        chosenIndex[currentIndex] = Math.floor(Math.random() * numberOfPlayersIndex)
-        checkIfEquals(chosenIndex, currentIndex, currentIndex -1, numberOfPlayersIndex)
-    }
-}
 
 module.exports = (io) => {
     let startGameIO = io.of('/start-game')

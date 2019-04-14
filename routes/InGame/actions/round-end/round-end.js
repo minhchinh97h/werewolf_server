@@ -409,7 +409,7 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                         }
 
                                         //If not any side has won the game yet, reset round end's, round end target's, end round action's, Werewolves current target's,
-                                        //Werewolves end turn's, Werewolves end vote's
+                                        //Werewolves end turn's, Werewolves end vote's, etc
                                         else{
                                             callingOrder.forEach((order, index, arr) => {
                                                 if(order.name === "round end"){
@@ -420,6 +420,10 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                                         }
                                                     }
                                                     arr[index].receivePressedVotePlayers = receivePressedVotePlayers
+                                                }
+
+                                                else if(order.name = "round end kill decisions"){
+                                                    order.killDecisionsObject = {}
                                                 }
 
                                                 else if(order.name === "round end target"){
@@ -463,6 +467,14 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                                     arr[index].player.length = 0
                                                     arr[index].chosen = ''
                                                 }
+
+                                                else if (order.name === "Werewolves vote target"){
+                                                    arr[index].werewolvesTargetObject = {}
+                                                }
+
+                                                else if (order.name === "Werewolves agree on kill"){
+                                                    arr[index].agreeOnKillObject = {}
+                                                }
                                             })
 
                                             Room.updateOne({'roomid': req.params.roomid}, {$set: {'callingOrder': callingOrder}}, (err, result) => {
@@ -482,6 +494,54 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                             res.send('Not all players end round')
                         }
                     }
+                })
+            }
+        })
+    })
+})
+
+
+
+router.post('/:roomid/round-end-store-my-choice', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => { 
+        Room.findOneAndUpdate({'roomid': req.params.roomid},
+                                {$set: {[`callingOrder.$[element].killDecisionsObject.${req.body.player}`] : req.body.chosenPlayer}},
+                                {arrayFilters: [{'element.name': 'round end kill decisions'}]}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                res.send('ok')
+            }
+        })
+    })
+})
+
+router.get('/:roomid/round-end-get-other-choices', (req, res, next) => {
+    mongoose.connect(mongoUrl, { useNewUrlParser: true })
+
+    var db = mongoose.connection
+
+    db.on('error', console.error.bind(console, 'connection error: '))
+
+    db.once('open', () => { 
+        Room.findOne({'roomid': req.params.roomid}, {'callingOrder': 1, '_id': 0}, (err, result) => {
+            if(err) return console.log(err)
+
+            if(result !== null){
+                let callingOrder = result.callingOrder
+
+                callingOrder.every((order) => {
+                    if(order.name === "round end kill decisions"){
+                        res.send(order.killDecisionsObject)
+                        return false
+                    } 
+                    return true
                 })
             }
         })
@@ -537,13 +597,42 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
+    const RequestToStoreMyChoice = (data) => {
+        axios({
+            method: 'post',
+            url: serverUrl + 'in-game/actions/' + data.roomid + '/round-end-store-my-choice',
+            data: data
+        })
+        .then(res => {
+            if(res.data === 'ok')
+                reIO.in(data.roomid).emit('GetOtherChoices', data)
+
+        })
+        .catch(err => console.log(err))
+    }
+
+    const RequestToGetOtherChoices = (roomid, socket) => {
+        axios({
+            method: 'get',
+            url: serverUrl + 'in-game/actions/' + roomid + '/round-end-get-other-choices'
+        })
+        .then(res => {
+            socket.emit('OtherKillDecisions', res.data)
+        })
+        .catch(err => console.log(err))
+    }   
+
     reIO.on('connect', socket => {
         socket.on('JoinRoom', roomid => {
             socket.join(roomid)
         })
 
         socket.on('BroadCastMyChoice', data => {
-            reIO.in(data.roomid).emit('GetOtherChoices', data)
+            RequestToStoreMyChoice(data)
+        })
+
+        socket.on('RequestToGetOtherChoices', roomid => {
+            RequestToGetOtherChoices(roomid, socket)
         })
 
         socket.on('RequestToHangPlayer', data => {

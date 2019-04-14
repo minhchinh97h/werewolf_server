@@ -4,18 +4,23 @@ class CallingOrderConstructor {
     GetCallingOrder(){
         let callingOrder = [
             {
-                'name': 'round end',
+                'name': 'round end', //morning phase
                 'special': true,
                 'receivePressedVotePlayers': {}
             },
             {
-                'name': 'round end target',
+                'name': 'round end kill decisions',
+                'special': true,
+                'killDecisionsObject': {}
+            },
+            {
+                'name': 'round end target', //morning phase
                 'special': true,
                 'targets': [],
                 'chosenTarget': ''
             },
             {
-                'name': 'end round action', //To gather info about players who clicked on end round button to be able to proceed next round
+                'name': 'end round action', //To gather info about players who clicked on end round button to be able to proceed next round (morning phase)
                 'special': true,
                 'player': {}
             },
