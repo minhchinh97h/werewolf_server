@@ -86,7 +86,7 @@ router.post('/:roomid/player-close-game', (req, res, next) => {
     db.once('open', () => { 
         Player.deleteOne({'username': req.body.username, 'roomid': req.params.roomid}, (err, result) => {
             if(err) return console.log(err)
-
+            
             Room.findOneAndUpdate({'roomid': req.params.roomid}, {$pull: {'totalPlayers': req.body.username}}, (err, result) => {
                 if(err) return console.log(err)
 
@@ -95,15 +95,13 @@ router.post('/:roomid/player-close-game', (req, res, next) => {
 
                     if(totalPlayers instanceof Array && totalPlayers.length === 0){
                         Room.deleteOne({'roomid': req.params.roomid}, (err, result) => {
-                            res.send('ok')
                         })
                     }
-
-                    else
-                        res.send('ok')
+                        
                 }
             })
         })
+        res.send('ok')
     })
 })
 
