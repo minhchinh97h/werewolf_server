@@ -422,7 +422,7 @@ router.post('/:roomid/request-to-end-round', (req, res, next) => {
                                                     arr[index].receivePressedVotePlayers = receivePressedVotePlayers
                                                 }
 
-                                                else if(order.name = "round end kill decisions"){
+                                                else if(order.name === "round end kill decisions"){
                                                     arr[index].killDecisionsObject = {}
                                                 }
 
