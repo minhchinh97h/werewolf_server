@@ -30,7 +30,7 @@ server.on('error', onError);
 server.on('listening', onListening);
 
 io.listen(server, {
-  transport: ['polling']
+  transport: ['websocket', 'polling']
 })
 
 /**
