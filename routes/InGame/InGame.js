@@ -132,6 +132,17 @@ module.exports = (io) => {
         .catch(err => console.log(err))
     }
 
+    const EachRoleRequestToGetFirstRound = (roomid, socket) => {
+        axios({
+            method: 'get',
+            url: serverUrl + 'in-game/' + roomid + '/retrieve-first-turn'
+        })
+        .then(res => {
+            socket.emit('EachRoleGetFirstRound', res.data)
+        })
+        .catch(err => console.log(err))
+    }
+
     const getAllHypnotized = (roomid, socket) => {
         axios({
             method: 'get',
@@ -166,8 +177,12 @@ module.exports = (io) => {
             socket.join(data)
         })
 
-        socket.on('RequestToStartTheGame1stRound', (data) => {
-            getTheFirstTurn(data)
+        socket.on('EachRoleRequestToGetFirstRound', (roomid) => {
+            EachRoleRequestToGetFirstRound(roomid, socket)
+        })
+
+        socket.on('RequestToStartTheGame1stRound', (roomid) => {
+            getTheFirstTurn(roomid)
 
         })
 
