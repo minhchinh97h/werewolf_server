@@ -244,15 +244,23 @@ router.get('/:roomid', (req, res, next) => {
                 })
 
                 //Update round end's receivePressedVotePlayers and end round action's player
-                result.players.forEach((player) => {
-                    newCallingOrder.forEach((order, index, arr) => {
-                        if(order.name === "round end"){
-                            arr[index].receivePressedVotePlayers[player] = false
+
+                newCallingOrder.forEach((order, index, arr) => {
+                    if(order.name === "round end"){
+                        if(result.players instanceof Array){
+                            result.players.forEach(player => {
+                                arr[index].receivePressedVotePlayers[player] = false
+                            })
                         }
-                        else if(order.name === "end round action"){
-                            arr[index].player[player] = false
+                    }
+
+                    if(order.name === "end round action"){
+                        if(result.players instanceof Array){
+                            result.players.forEach(player => {
+                                arr[index].player[player] = false
+                            })
                         }
-                    })
+                    }
                 })
 
                 //Update newCallingOrder with werewolves's relevant fields

@@ -47,7 +47,7 @@ router.get('/:roomid/retrieve-first-turn', (req, res, next) => {
 
             if(result !== null){
                 result.callingOrder.every(order => {
-                    if(order.player instanceof Array && order.player.length !== 0 && !order.special){
+                    if(order.player instanceof Array && order.player.length > 0 && !order.special){
                         
                         //Update current called role
                         Room.updateOne({'roomid': req.params.roomid},
@@ -57,7 +57,7 @@ router.get('/:roomid/retrieve-first-turn', (req, res, next) => {
 
                             if(result !== null){
                                 if(order.name === "Werewolves")
-                                res.send(order.player)
+                                    res.send(order.player)
 
                                 else
                                     res.send(order.player[0])
@@ -66,8 +66,8 @@ router.get('/:roomid/retrieve-first-turn', (req, res, next) => {
 
                         return false
                     }
-                    else
-                        return true
+
+                    return true
                 })
             }
 
