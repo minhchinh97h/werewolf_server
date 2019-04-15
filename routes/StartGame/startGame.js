@@ -28,7 +28,7 @@ router.get('/:roomid', (req, res, next) => {
             
             if(result !== null){
                 let callingOrder = new callingOrderConstructor().GetCallingOrder(),
-                    players = result.players,
+                    players = result.players.map(player => {return player}),
                     unusedRoles = result.unusedRoles
 
                 
