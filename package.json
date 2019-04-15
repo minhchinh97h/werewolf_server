@@ -5,6 +5,12 @@
   "scripts": {
     "start": "node ./bin/www"
   },
+  "proxy": {
+    "/socket.io": {
+      "target": "http://159.89.111.33:3001/",
+      "ws": true
+    }
+  },
   "dependencies": {
     "axios": "^0.18.0",
     "cookie-parser": "^1.4.3",
