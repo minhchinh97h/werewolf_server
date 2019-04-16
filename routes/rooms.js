@@ -77,7 +77,7 @@ router.post('/:roomid/get-room-check-username', (req, res, next) => {
                         if(err) return console.log(err)
 
                         if(result !== null){
-                            Room.findOneAndUpdate({'roomid': req.params.roomid}, {$push: {'players': req.body.username}}, (err, result) => {
+                            Room.findOneAndUpdate({'roomid': req.params.roomid}, {$push: {'players': req.body.username, 'totalPlayers': req.body.username}}, (err, result) => {
                                 if(err) return console.log(err)
 
                                 if(result !== null){
