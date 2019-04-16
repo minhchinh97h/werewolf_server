@@ -37,34 +37,65 @@ router.post('/:roomid/retrieve-next-turn', (req, res, next) => {
                         if(index < (notSpecialRole.length - 1)){
                             for(let i = index + 1; i < notSpecialRole.length; i++){
 
-                                if(notSpecialRole[i].player.length > 0){
-                                    
-                                    //Update current called role
-                                    Room.updateOne({'roomid': req.params.roomid},
-                                                    {$set: {"callingOrder.$[element].role": notSpecialRole[i].name}},
-                                                    {arrayFilters: [{"element.name": "current called role"}]}, (err, result) => {
-                                        if(err) return console.log(err)
+                                if(i === notSpecialRole.length - 1) {
+                                    if(notSpecialRole[i].player instanceof Array && notSpecialRole[i].player.length === 0){
+                                        res.send("round ends")
+                                        break
+                                    }
+                                    else if(notSpecialRole[i].player instanceof Array && notSpecialRole[i].player.length > 0){
+                                        //Update current called role
+                                        Room.updateOne({'roomid': req.params.roomid},
+                                        {$set: {"callingOrder.$[element].role": notSpecialRole[i].name}},
+                                        {arrayFilters: [{"element.name": "current called role"}]}, (err, result) => {
+                                            if(err) return console.log(err)
 
-                                        if(result !== null){
+                                            if(result !== null){
 
-                                            //Roles that not Werewolves can only be called once per player
-                                            if(notSpecialRole[i].name !== "Werewolves"){
-                                                res.send(notSpecialRole[i].player[0])
+                                                //Roles that not Werewolves can only be called once per player
+                                                if(notSpecialRole[i].name !== "Werewolves"){
+                                                    res.send(notSpecialRole[i].player[0])
+                                                }
+                                                
+                                                //For Werewolves, we call all the players at one time
+                                                else{
+                                                    res.send(notSpecialRole[i].player)
+                                                }
                                             }
-                                            
-                                            //For Werewolves, we call all the players at one time
-                                            else{
-                                                res.send(notSpecialRole[i].player)
-                                            }
-                                        }
-                                    })
+                                        })
 
-                                    break
+                                        break
+                                    }
                                 }
 
-                                // else{
-                                //     res.send("round ends")
-                                // }
+                                else{
+                                    if(notSpecialRole[i].player instanceof Array && notSpecialRole[i].player.length > 0){
+                                        //Update current called role
+                                        Room.updateOne({'roomid': req.params.roomid},
+                                                        {$set: {"callingOrder.$[element].role": notSpecialRole[i].name}},
+                                                        {arrayFilters: [{"element.name": "current called role"}]}, (err, result) => {
+                                            if(err) return console.log(err)
+    
+                                            if(result !== null){
+    
+                                                //Roles that not Werewolves can only be called once per player
+                                                if(notSpecialRole[i].name !== "Werewolves"){
+                                                    res.send(notSpecialRole[i].player[0])
+                                                }
+                                                
+                                                //For Werewolves, we call all the players at one time
+                                                else{
+                                                    res.send(notSpecialRole[i].player)
+                                                }
+                                            }
+                                        })
+    
+                                        break
+                                    }
+
+                                    else{
+                                        continue
+                                    }
+                                }
                             }
                         }
                         
